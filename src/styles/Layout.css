@@ -86,7 +86,7 @@
 
 .page-container {
   flex: 1;
-  padding: 20px;
+  padding: 0; /* Padding moved to ptr-content for better pull-to-refresh behavior */
   position: relative;
   overflow: hidden; /* Important to keep scroll trapped in PTR */
 }
@@ -110,7 +110,7 @@
     padding: 0 12px;
   }
   .page-container {
-    padding: 12px;
+    padding: 0;
   }
   .search-bar {
     display: none;

@@ -79,7 +79,7 @@ const Layout = () => {
             padding-bottom: 68px; /* Space for bottom nav */
           }
           .page-container {
-            padding: 12px 14px;
+            padding: 0;
           }
         }
       `}</style>

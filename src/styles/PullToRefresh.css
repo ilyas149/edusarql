@@ -4,6 +4,7 @@
   width: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none; /* Bypasses browser default pull-to-refresh */
 }
 
 .ptr-indicator {
@@ -42,4 +43,11 @@
 .ptr-content {
   min-height: 100%;
   will-change: transform;
+  padding: 20px; /* Moved from page-container to ensure scroll interaction area covers whole viewport */
+}
+
+@media (max-width: 768px) {
+  .ptr-content {
+    padding: 12px 14px;
+  }
 }
