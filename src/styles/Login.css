@@ -1,0 +1,96 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  padding: 16px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 32px 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-logo-img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  object-fit: contain;
+}
+
+.login-header h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.login-header p {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.role-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.role-select:focus {
+  border-color: var(--primary);
+  background-color: white;
+}
+
+input {
+  width: 100%;
+  padding: 8px 10px;
+}
+
+.login-submit {
+  width: 100%;
+  padding: 8px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.error-msg {
+  color: #ef4444;
+  font-size: 0.7rem;
+  text-align: center;
+  margin-bottom: 12px;
+}

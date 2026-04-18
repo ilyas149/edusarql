@@ -1,0 +1,108 @@
+.students-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filters-container {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.search-input {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+}
+
+.search-input input {
+  font-size: 0.75rem;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+}
+
+.batch-filter select {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.students-list-view {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.opt-btn {
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.opt-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.batch-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #eff6ff;
+  color: var(--primary);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section h3 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.contact-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.whatsapp-tag {
+  font-size: 0.55rem;
+  background: #22c55e;
+  color: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .section-grid {
+    grid-template-columns: 1fr;
+  }
+}
