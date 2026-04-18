@@ -32,6 +32,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overscroll-behavior: none;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-main);
@@ -39,6 +43,7 @@ body {
   font-size: var(--font-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
 
   /* PWA Restrictions */
   user-select: none;

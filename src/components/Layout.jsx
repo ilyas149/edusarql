@@ -1,10 +1,12 @@
 import React from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
 import { isAuthenticated } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { Bell, Menu } from 'lucide-react';
 import '../styles/Layout.css';
+import '../styles/BottomNav.css';
 
 const Layout = () => {
   const location = useLocation();
@@ -36,6 +38,7 @@ const Layout = () => {
     <div className={`layout-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+      
       <main className="main-content">
         <header className="content-header">
           <div className="header-left-side">
@@ -54,10 +57,24 @@ const Layout = () => {
             </div>
           </div>
         </header>
+
         <div className="page-container">
           <Outlet />
         </div>
       </main>
+
+      <BottomNav />
+
+      <style>{`
+        @media (max-width: 768px) {
+          .main-content {
+            padding-bottom: 68px; /* Space for bottom nav */
+          }
+          .page-container {
+            padding: 12px 14px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
