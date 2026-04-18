@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 48px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -52,7 +52,7 @@
 /* iOS Safe Area */
 @supports (padding: env(safe-area-inset-bottom)) {
   .bottom-nav {
-    height: calc(56px + env(safe-area-inset-bottom));
+    height: calc(48px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
