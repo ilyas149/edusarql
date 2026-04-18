@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { 
   Users, 
   UserSquare2, 
@@ -11,11 +11,14 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { getRole, ROLES, getStudentId } from '../services/auth';
+import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
 import '../styles/BottomNav.css';
 
 const BottomNav = () => {
   const role = getRole();
   const studentId = getStudentId();
+  const location = useLocation();
+  const { switchTab } = useNativeBackNavigation();
 
   const adminTeacherLinks = [
     { name: 'Home', icon: LayoutDashboard, path: '/dashboard' },
@@ -33,19 +36,26 @@ const BottomNav = () => {
 
   const links = role === ROLES.STUDENT || role === ROLES.PARENT ? studentLinks : adminTeacherLinks;
 
+  const isActive = (path) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <nav className="bottom-nav glass mobile-only">
       {links.map((item) => (
-        <NavLink 
+        <div 
           key={item.path} 
-          to={item.path}
-          className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-          end={item.path === '/dashboard'}
+          onClick={() => switchTab(item.path)}
+          className={`bottom-nav-item ${isActive(item.path) ? 'active' : ''}`}
+          style={{ cursor: 'pointer' }}
         >
           <div className="nav-icon-wrapper">
              <item.icon size={24} strokeWidth={2.5} />
           </div>
-        </NavLink>
+        </div>
       ))}
     </nav>
   );

@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
 import '../styles/Modal.css';
 
-const Modal = ({ isOpen, onClose, title, children, variant }) => {
+const Modal = ({ isOpen, onClose, title, children, variant, id }) => {
+  const { registerOverlay, unregisterOverlay } = useNativeBackNavigation();
+  const generatedId = React.useId();
+  const modalId = React.useMemo(() => 
+    id || `modal-${title?.replace(/\s+/g, '-').toLowerCase() || generatedId.replace(/:/g, '')}`,
+    [id, title, generatedId]
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      registerOverlay(modalId, onClose);
+      return () => unregisterOverlay(modalId);
+    }
+  }, [isOpen, modalId, onClose, registerOverlay, unregisterOverlay]);
+
   if (!isOpen) return null;
 
   if (variant === 'image') {

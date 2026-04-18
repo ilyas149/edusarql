@@ -6,6 +6,7 @@ import PullToRefresh from './PullToRefresh';
 import { isAuthenticated } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { Bell, Menu } from 'lucide-react';
+import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
 import '../styles/Layout.css';
 import '../styles/BottomNav.css';
 
@@ -13,6 +14,15 @@ const Layout = () => {
   const location = useLocation();
   const { headerAction, headerTitle, backAction } = useHeader();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const { registerOverlay, unregisterOverlay } = useNativeBackNavigation();
+
+  // Register sidebar as overlay when open
+  React.useEffect(() => {
+    if (isSidebarOpen) {
+      registerOverlay('sidebar', () => setIsSidebarOpen(false));
+      return () => unregisterOverlay('sidebar');
+    }
+  }, [isSidebarOpen, registerOverlay, unregisterOverlay]);
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
