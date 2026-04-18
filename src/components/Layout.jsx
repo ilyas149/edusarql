@@ -19,8 +19,9 @@ const Layout = () => {
   }
 
   const handleRefresh = async () => {
-    // We just reload the window which is the standard PWA update check/manual sync
-    window.location.reload();
+    // Since we use real-time listeners (onSnapshot), data is already synced.
+    // We simulate a small delay to provide user feedback without triggering the browser's native progress bar.
+    await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   const titles = {
