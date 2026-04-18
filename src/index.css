@@ -32,8 +32,8 @@
   box-sizing: border-box;
 }
 
-html {
-  overscroll-behavior: none;
+html, body {
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -43,7 +43,6 @@ body {
   font-size: var(--font-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior-y: contain;
 
   /* PWA Restrictions */
   user-select: none;
