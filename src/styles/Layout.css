@@ -87,10 +87,8 @@
 .page-container {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  overflow: hidden; /* Important to keep scroll trapped in PTR */
 }
 
 .sidebar-overlay {

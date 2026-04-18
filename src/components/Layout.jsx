@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
+import PullToRefresh from './PullToRefresh';
 import { isAuthenticated } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { Bell, Menu } from 'lucide-react';
@@ -16,6 +17,11 @@ const Layout = () => {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
+
+  const handleRefresh = async () => {
+    // We just reload the window which is the standard PWA update check/manual sync
+    window.location.reload();
+  };
 
   const titles = {
     '/dashboard': 'Overview',
@@ -59,7 +65,9 @@ const Layout = () => {
         </header>
 
         <div className="page-container">
-          <Outlet />
+          <PullToRefresh onRefresh={handleRefresh}>
+            <Outlet />
+          </PullToRefresh>
         </div>
       </main>
 
