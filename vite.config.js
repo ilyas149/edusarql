@@ -44,7 +44,7 @@ export default defineConfig({
             src: 'img/logo.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       }
