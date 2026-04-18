@@ -1,36 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, updateDoc } from 'firebase/firestore';
-import { Plus, Trash2, BookOpen, Calendar, AlignLeft, ShieldCheck, Pencil, X } from 'lucide-react';
+import { collection, addDoc, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { Plus, Trash2, BookOpen, Calendar, AlignLeft, Pencil, X } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
+import { useData } from '../context/DataContext';
 
 const ExamTypes = () => {
   const { setHeaderAction } = useHeader();
-  const [examTypes, setExamTypes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { examTypes, loading: contextLoading } = useData();
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
-  
+  const [localLoading, setLocalLoading] = useState(false);
+
+  const loading = contextLoading.examTypes || localLoading;
+
   const [formData, setFormData] = useState({
     title: '',
     year: new Date().getFullYear().toString(),
     description: ''
   });
-
-  const fetchData = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'exam_types'), orderBy('createdAt', 'desc'));
-      const snap = await getDocs(q);
-      setExamTypes(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    } catch (err) { console.error(err); }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { 
-    Promise.resolve().then(() => fetchData()); 
-  }, [fetchData]);
 
   const handleToggleForm = React.useCallback(() => {
     if (showForm) {
@@ -65,7 +54,7 @@ const ExamTypes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.year) return;
-    setLoading(true);
+    setLocalLoading(true);
     try {
       if (isEditing) {
         await updateDoc(doc(db, 'exam_types', editId), {
@@ -82,16 +71,14 @@ const ExamTypes = () => {
       setIsEditing(false);
       setEditId(null);
       setShowForm(false);
-      fetchData();
     } catch (err) { alert(err.message); }
-    setLoading(false);
+    setLocalLoading(false);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("CRITICAL: Institutional category removal. This may impact historical performance archives for this specific cycle. Continue?")) return;
     try {
       await deleteDoc(doc(db, 'exam_types', id));
-      fetchData();
     } catch (err) { alert(err.message); }
   };
 

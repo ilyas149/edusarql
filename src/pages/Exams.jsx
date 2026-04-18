@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { db } from '../services/firebase';
 import {
-  collection, getDocs, addDoc, serverTimestamp, query, where,
+  collection, addDoc, serverTimestamp,
   doc, updateDoc, getDoc, setDoc, deleteDoc
 } from 'firebase/firestore';
 import {
@@ -12,11 +12,21 @@ import {
 } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
 import { getRole, ROLES } from '../services/auth';
+import { useData } from '../context/DataContext';
 
 const Exams = () => {
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;
   const { setHeaderAction, setHeaderTitle, setBackAction } = useHeader();
+  const { 
+    examTypes: allExamTypes, 
+    exams: allExams, 
+    batches, 
+    subjects, 
+    students: allStudents,
+    loading: contextLoading 
+  } = useData();
+  
   const scrollRef = useRef(null);
 
   const [view, setView] = useState('overview');
@@ -25,14 +35,23 @@ const Exams = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  const [examTypes, setExamTypes] = useState([]);
-  const [exams, setExams] = useState([]);
-  const [batches, setBatches] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  // Filtered lists from context
+  const examTypes = useMemo(() => 
+    allExamTypes.filter(t => t.year === selectedYear),
+    [allExamTypes, selectedYear]
+  );
+
+  const exams = useMemo(() => 
+    allExams.filter(ex => ex.examTypeId === selectedType?.id),
+    [allExams, selectedType]
+  );
+
   const [students, setStudents] = useState([]);
   const [marksData, setMarksData] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const loading = contextLoading.examTypes || contextLoading.exams || localLoading;
 
   // Drag-to-Scroll Logic States
   const [isDragging, setIsDragging] = useState(false);
@@ -44,26 +63,6 @@ const Exams = () => {
   const [isEditingSession, setIsEditingSession] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [newSession, setNewSession] = useState({ batchId: '', subjectConfigs: {} });
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const typeSnap = await getDocs(query(collection(db, 'exam_types'), where('year', '==', selectedYear)));
-      setExamTypes(typeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      const batchSnap = await getDocs(collection(db, 'batches'));
-      setBatches(batchSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      const subSnap = await getDocs(collection(db, 'subjects'));
-      setSubjects(subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    } catch (err) { console.error(err); }
-    setLoading(false);
-  }, [selectedYear]);
-
-  const fetchSessions = useCallback(async () => {
-    if (!selectedType) return;
-    const q = query(collection(db, 'exams'), where('examTypeId', '==', selectedType.id));
-    const snap = await getDocs(q);
-    setExams(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  }, [selectedType]);
 
   const handleOpenAdd = useCallback(() => {
     setNewSession({ batchId: '', subjectConfigs: {} });
@@ -90,31 +89,22 @@ const Exams = () => {
     setSaving(false);
   }, [selectedSession, marksData]);
 
-  useEffect(() => { 
-    Promise.resolve().then(() => fetchData()); 
-  }, [fetchData]);
-
-  useEffect(() => {
-    if (view === 'type_detail' && selectedType) {
-      Promise.resolve().then(() => fetchSessions());
-    }
-  }, [view, selectedType, fetchSessions]);
-
   useEffect(() => {
     if (view === 'marks_entry' && selectedSession) {
       (async () => {
-        setLoading(true);
-        const q = query(collection(db, 'students'), where('batchId', '==', selectedSession.batchId));
-        const snap = await getDocs(q);
-        setStudents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setLocalLoading(true);
+        // Students are already in context, but we filter them by batch
+        const batchStudents = allStudents.filter(s => s.batchId === selectedSession.batchId);
+        setStudents(batchStudents);
+        
         const markSnap = await getDoc(doc(db, 'marks', selectedSession.id));
         setMarksData(markSnap.exists() ? markSnap.data().records : {});
-        setLoading(false);
+        setLocalLoading(false);
       })();
     } else {
       Promise.resolve().then(() => setIsRecording(false));
     }
-  }, [view, selectedSession]);
+  }, [view, selectedSession, allStudents]);
 
   useEffect(() => {
     if (view === 'marks_entry' && selectedSession && selectedType) {
@@ -246,18 +236,17 @@ const Exams = () => {
   const handleDeleteSession = async (e, sessionId) => {
     e.stopPropagation();
     if (!window.confirm("CRITICAL ACTION: Archive destruction requested. All performance records for this batch session will be permanently deleted. Continue?")) return;
-    setLoading(true);
+    setLocalLoading(true);
     try {
       await deleteDoc(doc(db, 'exams', sessionId));
       await deleteDoc(doc(db, 'marks', sessionId));
-      fetchSessions();
     } catch (err) { alert(err.message); }
-    setLoading(false);
+    setLocalLoading(false);
   };
 
   const handleFinalizeSession = async () => {
     if (!newSession.batchId || Object.keys(newSession.subjectConfigs).length === 0) return;
-    setLoading(true);
+    setLocalLoading(true);
     try {
       const subjectArray = Object.entries(newSession.subjectConfigs).map(([name, total]) => ({
         name,
@@ -277,9 +266,8 @@ const Exams = () => {
         await addDoc(collection(db, 'exams'), data);
       }
       setShowAddBatch(false);
-      fetchSessions();
     } catch (err) { alert(err.message); }
-    setLoading(false);
+    setLocalLoading(false);
   };
 
   return (

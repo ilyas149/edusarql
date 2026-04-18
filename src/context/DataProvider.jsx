@@ -14,8 +14,13 @@ export const DataProvider = ({ children }) => {
         teachers: true,
         batches: true,
         subjects: true,
-        periods: true
+        periods: true,
+        examTypes: true,
+        exams: true
     });
+
+    const [examTypes, setExamTypes] = useState([]);
+    const [exams, setExams] = useState([]);
 
     useEffect(() => {
         // Real-time Students
@@ -73,16 +78,40 @@ export const DataProvider = ({ children }) => {
             setLoading(prev => ({ ...prev, periods: false }));
         });
 
+        // Real-time Exam Types
+        const qExamTypes = query(collection(db, 'exam_types'), orderBy('year', 'desc'));
+        const unsubExamTypes = onSnapshot(qExamTypes, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setExamTypes(data);
+            setLoading(prev => ({ ...prev, examTypes: false }));
+        }, (err) => {
+            console.error("ExamTypes Sync Error:", err);
+            setLoading(prev => ({ ...prev, examTypes: false }));
+        });
+
+        // Real-time Exams (Sessions)
+        const qExams = query(collection(db, 'exams'), orderBy('updatedAt', 'desc'));
+        const unsubExams = onSnapshot(qExams, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setExams(data);
+            setLoading(prev => ({ ...prev, exams: false }));
+        }, (err) => {
+            console.error("Exams Sync Error:", err);
+            setLoading(prev => ({ ...prev, exams: false }));
+        });
+
         return () => {
             unsubStudents();
             unsubTeachers();
             unsubBatches();
             unsubSubjects();
             unsubPeriods();
+            unsubExamTypes();
+            unsubExams();
         };
     }, []);
 
-    const isAppLoading = loading.students || loading.teachers || loading.batches || loading.subjects || loading.periods;
+    const isAppLoading = loading.students || loading.teachers || loading.batches || loading.subjects || loading.periods || loading.examTypes || loading.exams;
 
     const value = {
         students,
@@ -90,6 +119,8 @@ export const DataProvider = ({ children }) => {
         batches,
         subjects,
         periods,
+        examTypes,
+        exams,
         loading,
         isAppLoading
     };
