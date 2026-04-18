@@ -43,7 +43,7 @@ const BottomNav = () => {
           end={item.path === '/dashboard'}
         >
           <div className="nav-icon-wrapper">
-             <item.icon size={20} strokeWidth={2.5} />
+             <item.icon size={24} strokeWidth={2.5} />
           </div>
         </NavLink>
       ))}

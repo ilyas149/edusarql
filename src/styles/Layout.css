@@ -12,7 +12,7 @@
 }
 
 .content-header {
-  height: 48px;
+  height: 52px;
   background: #ffffff;
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -42,7 +42,7 @@
 }
 
 .header-title h1 {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-main);
   margin: 0;

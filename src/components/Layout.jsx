@@ -77,7 +77,7 @@ const Layout = () => {
       <style>{`
         @media (max-width: 768px) {
           .main-content {
-            padding-bottom: 60px; /* Space for bottom nav */
+            padding-bottom: 68px; /* Space for bottom nav */
           }
           .page-container {
             padding: 0;
