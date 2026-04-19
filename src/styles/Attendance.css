@@ -96,7 +96,7 @@
 .toggle-btn.absent { color: #16a34a; }
 
 .save-container {
-  padding: 20px;
+  padding: 5px;
   display: flex;
   justify-content: flex-end;
 }

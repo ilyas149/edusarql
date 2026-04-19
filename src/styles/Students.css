@@ -6,7 +6,7 @@
 .filters-container {
   display: flex;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px;
   margin-bottom: 20px;
   align-items: center;
   background: #ffffff;
