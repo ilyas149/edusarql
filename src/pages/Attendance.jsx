@@ -430,11 +430,22 @@ const Attendance = () => {
         .confirm-btn { padding: 14px 40px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; }
 
         @media (max-width: 768px) {
-           .selectors-bar { flex-direction: column; gap: 8px; }
-           .custom-dropdown-selector, .premium-input-wrap input { height: 44px; }
-           .marking-row { padding: 10px 12px; gap: 8px; }
-           .m-student { font-size: 0.75rem; }
-           .m-btn { padding: 6px 8px; min-width: 65px; gap: 4px; border-radius: 6px; }
+           .attendance-page-wrapper { padding: var(--m-padding) 0; }
+           .selectors-bar { flex-direction: column; gap: var(--m-gap-sm); padding: var(--m-padding); margin-bottom: var(--m-gap-sm); }
+           .custom-dropdown-selector, .premium-input-wrap input { height: 42px; padding: 0 12px; }
+           .selector-value { font-size: 0.8rem; }
+           
+           .matrix-table th, .matrix-table td { padding: 8px 6px; font-size: 0.65rem; }
+           .s-label { font-size: 0.75rem; }
+           .sticky-col-cell, .sticky-col-header { padding-left: 8px !important; padding-right: 8px !important; min-width: 120px !important; }
+           .s-avatar { width: 22px; height: 22px; font-size: 0.6rem; }
+
+           .marking-row { padding: 8px var(--m-padding); gap: 6px; }
+           .m-student { font-size: 0.8rem; }
+           .m-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+           .m-btn { padding: 6px; min-width: 70px; gap: 4px; border-radius: 6px; font-size: 0.65rem; }
+           .marking-footer { padding: 12px; }
+           .confirm-btn { width: 100%; padding: 12px; font-size: 0.85rem; }
         }
       `}</style>
     </div>

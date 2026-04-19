@@ -24,6 +24,17 @@
   --gap-md: 12px;
   --padding-sm: 8px 12px;
   --padding-md: 12px 16px;
+
+  /* Mobile Standard Minimal (Standardized) */
+  --m-padding: 10px;
+  --m-gap-xs: 4px;
+  --m-gap-sm: 6px;
+  --m-gap-md: 10px;
+  --m-font-xs: 0.75rem; /* 12px approx */
+  --m-font-sm: 0.8125rem; /* 13px approx */
+  --m-radius: 6px;
+  --m-btn-h: 32px;
+  --m-btn-p: 40px;
 }
 
 * {
@@ -156,9 +167,16 @@ ul {
 /* Global Card Grid Layout */
 .cards-grid {
   display: grid;
-  gap: 8px;
+  gap: var(--gap-sm);
   grid-template-columns: repeat(1, 1fr);
   padding: 4px;
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    gap: var(--m-gap-sm);
+    padding: var(--m-gap-xs);
+  }
 }
 
 @media (min-width: 1024px) {
@@ -202,6 +220,14 @@ ul {
   border-color: var(--primary);
 }
 
+@media (max-width: 768px) {
+  .compact-card {
+    padding: 6px 8px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+}
+
 .compact-card .avatar-mini {
   flex-shrink: 0;
 }
@@ -219,6 +245,12 @@ ul {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .card-name {
+    font-size: 0.8rem;
+  }
 }
 
 .card-sub {
@@ -268,6 +300,14 @@ ul {
   color: var(--primary);
   overflow: hidden;
   border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .avatar-mini {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 0.7rem;
+  }
 }
 
 .avatar-mini img {
