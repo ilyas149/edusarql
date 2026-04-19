@@ -1,7 +1,9 @@
 .layout-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
   background-color: var(--bg-main);
+  overflow: hidden;
 }
 
 .main-content {
@@ -9,6 +11,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .content-header {
@@ -21,7 +25,9 @@
   padding: 0 16px;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1001; /* Above Modal (500) */
+  padding-top: env(safe-area-inset-top, 0);
+  height: calc(52px + env(safe-area-inset-top, 0));
 }
 
 .header-left-side {
@@ -104,10 +110,11 @@
 
 @media (max-width: 768px) {
   .mobile-toggle-btn {
-    display: flex;
+    display: none !important;
   }
   .content-header {
-    padding: 0 12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
   .page-container {
     padding: 0;

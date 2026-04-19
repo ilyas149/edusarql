@@ -55,9 +55,6 @@ const Sidebar = ({ isOpen, onClose }) => {
             <p className="status-online">Online</p>
           </div>
         </div>
-        <button onClick={() => { logout(); onClose(); }} className="logout-icon-btn" title="Logout">
-          <LogOut size={18} />
-        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -88,9 +85,11 @@ const Sidebar = ({ isOpen, onClose }) => {
           </>
         )}
       </nav>
-
-      <div className="sidebar-bottom">
-        <Footer variant="sidebar" />
+      <div className="sidebar-footer-new">
+        <button onClick={() => { logout(); onClose(); }} className="sidebar-logout-btn">
+          <LogOut size={18} />
+          <span>Logout Account</span>
+        </button>
       </div>
     </div>
   );

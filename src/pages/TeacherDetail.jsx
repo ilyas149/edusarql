@@ -10,8 +10,9 @@ import Modal from '../components/Modal';
 import '../styles/StudentDetail.css';
 import { useData } from '../context/DataContext';
 
-const TeacherDetail = () => {
-  const { id } = useParams();
+const TeacherDetail = ({ teacherId: propId }) => {
+  const { id: routeId } = useParams();
+  const id = propId || routeId;
   const navigate = useNavigate();
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;

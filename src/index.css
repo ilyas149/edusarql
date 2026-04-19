@@ -33,10 +33,12 @@
 }
 
 html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Lock root scroll */
   overscroll-behavior-y: none;
-}
-
-body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
@@ -60,6 +62,18 @@ img {
   -moz-user-drag: none;
   -o-user-drag: none;
   pointer-events: none;
+}
+
+/* Hide scrollbars globally for native app feel */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 

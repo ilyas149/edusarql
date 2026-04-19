@@ -1,35 +1,17 @@
-import React, { useEffect } from 'react';
-import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
+import React from 'react';
+import { createPortal } from 'react-dom';
 import '../styles/Modal.css';
 
-const Modal = ({ isOpen, onClose, title, children, variant, id }) => {
-  const { registerOverlay, unregisterOverlay } = useNativeBackNavigation();
-  const generatedId = React.useId();
-  const modalId = React.useMemo(() => 
-    id || `modal-${title?.replace(/\s+/g, '-').toLowerCase() || generatedId.replace(/:/g, '')}`,
-    [id, title, generatedId]
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      registerOverlay(modalId, onClose);
-      return () => unregisterOverlay(modalId);
-    }
-  }, [isOpen, modalId, onClose, registerOverlay, unregisterOverlay]);
-
+const Modal = ({ isOpen, onClose, title, children, variant }) => {
   if (!isOpen) return null;
 
-  if (variant === 'image') {
-    return (
-      <div className="modal-overlay image-preview-mode" onClick={onClose}>
-        <div className="modal-content-plain" onClick={e => e.stopPropagation()}>
-          {children}
-        </div>
+  const modalContent = variant === 'image' ? (
+    <div className="modal-overlay image-preview-mode" onClick={onClose}>
+      <div className="modal-content-plain" onClick={e => e.stopPropagation()}>
+        {children}
       </div>
-    );
-  }
-
-  return (
+    </div>
+  ) : (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content glass" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -42,6 +24,8 @@ const Modal = ({ isOpen, onClose, title, children, variant, id }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

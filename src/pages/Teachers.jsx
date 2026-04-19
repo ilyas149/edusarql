@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { User, Plus } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
 import Modal from '../components/Modal';
@@ -7,15 +7,22 @@ import { getRole, ROLES } from '../services/auth';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { addTeacher } from '../services/teacherService';
 import { useData } from '../context/DataContext';
+import TeacherDetail from './TeacherDetail';
 
 const Teachers = () => {
-  const navigate = useNavigate();
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;
   const { setHeaderAction } = useHeader();
   const { teachers, loading: contextLoading } = useData();
   const loading = contextLoading.teachers;
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const isAddModalOpen = searchParams.get('modal') === 'add';
+  const activeTeacherId = searchParams.get('teacherId');
+
+  const openAddModal = useCallback(() => setSearchParams({ modal: 'add' }), [setSearchParams]);
+  const closeModals = () => setSearchParams({});
+  const openTeacherDetail = (id) => setSearchParams({ teacherId: id });
   const [formData, setFormData] = useState({
     name: '',
     department: '',
@@ -67,14 +74,14 @@ const Teachers = () => {
   useEffect(() => {
     if (isAdmin) {
       setHeaderAction(
-        <button className="add-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="add-btn" onClick={openAddModal}>
           <Plus size={16} />
           <span>Add Teacher</span>
         </button>
       );
     }
     return () => setHeaderAction(null);
-  }, [isAdmin, setHeaderAction]);
+  }, [isAdmin, setHeaderAction, openAddModal]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,7 +99,7 @@ const Teachers = () => {
         finalData.avatarPublicId = cloudData.public_id;
       }
       await addTeacher(finalData);
-      setIsModalOpen(false);
+      closeModals();
       resetForm();
     } catch (error) {
       console.error(error);
@@ -118,7 +125,7 @@ const Teachers = () => {
       ) : (
         <div className="cards-grid">
           {teachers.map(teacher => (
-            <div key={teacher.id} className="compact-card teacher-card" onClick={() => navigate(`/dashboard/teachers/${teacher.id}`)}>
+            <div key={teacher.id} className="compact-card teacher-card" onClick={() => openTeacherDetail(teacher.id)}>
               <div className="avatar-mini">
                 {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt="" /> : teacher.name.charAt(0)}
               </div>
@@ -133,8 +140,8 @@ const Teachers = () => {
       )}
 
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddModalOpen}
+        onClose={closeModals}
         title="Register New Teacher"
       >
         <form onSubmit={handleSubmit}>
@@ -226,12 +233,21 @@ const Teachers = () => {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="button" className="cancel-btn" onClick={closeModals}>Cancel</button>
             <button type="submit" className="save-btn" disabled={saveLoading}>
               {saveLoading ? 'Registering...' : 'Add Teacher'}
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Teacher Details Overlay (History-linked) */}
+      <Modal
+        isOpen={!!activeTeacherId}
+        onClose={closeModals}
+        title="Teacher Details"
+      >
+        {activeTeacherId && <TeacherDetail teacherId={activeTeacherId} />}
       </Modal>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
   Users, 
   UserSquare2, 
@@ -11,21 +11,18 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { getRole, ROLES, getStudentId } from '../services/auth';
-import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
 import '../styles/BottomNav.css';
 
 const BottomNav = () => {
   const role = getRole();
   const studentId = getStudentId();
-  const location = useLocation();
-  const { switchTab } = useNativeBackNavigation();
 
   const adminTeacherLinks = [
     { name: 'Home', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Students', icon: UserSquare2, path: '/dashboard/students' },
     { name: 'Attend', icon: ClipboardCheck, path: '/dashboard/attendance' },
     { name: 'Time', icon: Calendar, path: '/dashboard/timetable' },
-    { name: 'Exams', icon: GraduationCap, path: '/dashboard/exams' },
+    { name: 'Batches', icon: Layers, path: '/dashboard/batches' },
   ];
 
   const studentLinks = [
@@ -36,26 +33,19 @@ const BottomNav = () => {
 
   const links = role === ROLES.STUDENT || role === ROLES.PARENT ? studentLinks : adminTeacherLinks;
 
-  const isActive = (path) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard';
-    }
-    return location.pathname.startsWith(path);
-  };
-
   return (
     <nav className="bottom-nav glass mobile-only">
       {links.map((item) => (
-        <div 
+        <NavLink 
           key={item.path} 
-          onClick={() => switchTab(item.path)}
-          className={`bottom-nav-item ${isActive(item.path) ? 'active' : ''}`}
-          style={{ cursor: 'pointer' }}
+          to={item.path}
+          className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          end={item.path === '/dashboard'}
         >
           <div className="nav-icon-wrapper">
              <item.icon size={24} strokeWidth={2.5} />
           </div>
-        </div>
+        </NavLink>
       ))}
     </nav>
   );

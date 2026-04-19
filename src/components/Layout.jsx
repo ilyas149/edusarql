@@ -1,28 +1,29 @@
 import React from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import PullToRefresh from './PullToRefresh';
 import { isAuthenticated } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { Bell, Menu } from 'lucide-react';
-import { useNativeBackNavigation } from '../hooks/useNativeBackNavigation';
 import '../styles/Layout.css';
 import '../styles/BottomNav.css';
 
 const Layout = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { headerAction, headerTitle, backAction } = useHeader();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const { registerOverlay, unregisterOverlay } = useNativeBackNavigation();
 
-  // Register sidebar as overlay when open
-  React.useEffect(() => {
-    if (isSidebarOpen) {
-      registerOverlay('sidebar', () => setIsSidebarOpen(false));
-      return () => unregisterOverlay('sidebar');
-    }
-  }, [isSidebarOpen, registerOverlay, unregisterOverlay]);
+  // Determine if we are in an "immersive" view (detail page, chat, or when a specific modal is open via URL)
+  // We check for pathnames like /chat AND for query parameters like ?studentId=... or ?modal=...
+  const isSpecificViewActive = 
+    location.pathname.includes('/chat') || 
+    location.pathname.includes('/live') ||
+    searchParams.has('studentId') ||
+    searchParams.has('teacherId') ||
+    searchParams.has('batchId') ||
+    searchParams.get('modal') === 'true';
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
@@ -57,23 +58,23 @@ const Layout = () => {
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
       
       <main className="main-content">
-        <header className="content-header">
-          <div className="header-left-side">
-            <button className="mobile-toggle-btn" onClick={() => setIsSidebarOpen(true)}>
-              <Menu size={22} />
-            </button>
-            {backAction}
-            <div className="header-title">
-              <h1>{headerTitle || getTitle()}</h1>
+        {!isSpecificViewActive && (
+          <header className="content-header">
+            <div className="header-left-side">
+              {/* Mobile toggle hidden as per request */}
+              {backAction}
+              <div className="header-title">
+                <h1>{headerTitle || getTitle()}</h1>
+              </div>
             </div>
-          </div>
-          <div className="header-actions">
-            {headerAction}
-            <div className="notification-badge glass">
-              <Bell size={16} />
+            <div className="header-actions">
+              {headerAction}
+              <div className="notification-badge glass">
+                <Bell size={16} />
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         <div className="page-container">
           <PullToRefresh onRefresh={handleRefresh}>
@@ -82,12 +83,12 @@ const Layout = () => {
         </div>
       </main>
 
-      <BottomNav />
+      {!isSpecificViewActive && <BottomNav />}
 
       <style>{`
         @media (max-width: 768px) {
           .main-content {
-            padding-bottom: 68px; /* Space for bottom nav */
+            padding-bottom: ${isSpecificViewActive ? '0' : '68px'}; /* Space for bottom nav only if visible */
           }
           .page-container {
             padding: 0;

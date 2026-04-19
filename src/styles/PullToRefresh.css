@@ -41,7 +41,7 @@
 }
 
 .ptr-content {
-  min-height: 100%;
+  min-height: 101%;
   will-change: transform;
   padding: 20px; /* Moved from page-container to ensure scroll interaction area covers whole viewport */
 }

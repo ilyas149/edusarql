@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, User } from 'lucide-react';
 import { addStudent } from '../services/studentService';
 import { uploadToCloudinary } from '../services/cloudinary';
@@ -9,18 +9,24 @@ import Modal from '../components/Modal';
 import '../styles/Students.css';
 
 import { useData } from '../context/DataContext';
+import StudentDetail from './StudentDetail';
 
 const Students = () => {
-  const navigate = useNavigate();
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;
   const { setHeaderAction } = useHeader();
   const { students: allStudents, batches, loading: contextLoading } = useData();
   const loading = contextLoading.students || contextLoading.batches;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState(searchParams.get('batchId') || '');
+  
+  const isAddModalOpen = searchParams.get('modal') === 'add';
+  const activeStudentId = searchParams.get('studentId');
+
+  const openAddModal = useCallback(() => setSearchParams({ modal: 'add' }), [setSearchParams]);
+  const closeModals = () => setSearchParams({});
+  const openStudentDetail = (id) => setSearchParams({ studentId: id });
 
   
   // Form State
@@ -81,7 +87,7 @@ const Students = () => {
       }
 
       await addStudent(finalData);
-      setIsModalOpen(false);
+      closeModals();
       resetForm();
 // No refresh needed with onSnapshot
     } catch (error) {
@@ -121,14 +127,14 @@ const Students = () => {
   useEffect(() => {
     if (isAdmin) {
       setHeaderAction(
-        <button className="add-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="add-btn" onClick={openAddModal}>
           <Plus size={16} />
           <span>Add New</span>
         </button>
       );
     }
     return () => setHeaderAction(null);
-  }, [isAdmin, setHeaderAction]);
+  }, [isAdmin, setHeaderAction, openAddModal]);
 
   const filteredStudents = allStudents.filter(s => {
     const matchesSearch = 
@@ -169,7 +175,7 @@ const Students = () => {
           {filteredStudents.map(student => {
             const batch = batches.find(b => b.id === student.batchId);
             return (
-              <div key={student.id} className="compact-card" onClick={() => navigate(`/dashboard/students/${student.id}`)}>
+              <div key={student.id} className="compact-card" onClick={() => openStudentDetail(student.id)}>
                 <div className="avatar-mini">
                   {student.avatarUrl ? <img src={student.avatarUrl} alt="" /> : student.name.charAt(0)}
                 </div>
@@ -184,9 +190,10 @@ const Students = () => {
         </div>
       )}
 
+      {/* Registration Modal */}
       <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        isOpen={isAddModalOpen} 
+        onClose={closeModals} 
         title="Register New Student"
       >
         <form onSubmit={handleSubmit} className="modal-form">
@@ -316,12 +323,21 @@ const Students = () => {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="button" className="cancel-btn" onClick={closeModals}>Cancel</button>
             <button type="submit" className="save-btn" disabled={uploadLoading}>
               {uploadLoading ? 'Saving...' : 'Register Student'}
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Student Details Overlay (History-linked) */}
+      <Modal
+        isOpen={!!activeStudentId}
+        onClose={closeModals}
+        title="Student Details"
+      >
+        {activeStudentId && <StudentDetail studentId={activeStudentId} />}
       </Modal>
     </div>
   );
