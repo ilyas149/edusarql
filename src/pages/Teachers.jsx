@@ -7,6 +7,7 @@ import { getRole, ROLES } from '../services/auth';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { addTeacher } from '../services/teacherService';
 import { useData } from '../context/DataContext';
+import { isUsernameTaken } from '../services/auth';
 import TeacherDetail from './TeacherDetail';
 
 
@@ -108,11 +109,31 @@ const Teachers = () => {
     setSaveLoading(true);
     try {
       let finalData = { ...formData };
+
+      // 0. Validate required credentials
+      const cleanUser = (finalData.username || "").trim();
+      if (!cleanUser || !finalData.password) {
+        alert("Username and Password are required for teacher enrollment.");
+        setSaveLoading(false);
+        return;
+      }
+
+      // 1. Check for unique username
+      const taken = await isUsernameTaken(cleanUser);
+      if (taken) {
+        alert(`The username "${cleanUser}" is already taken. Please choose another one.`);
+        setSaveLoading(false);
+        return;
+      }
+
       if (selectedFile) {
         const cloudData = await uploadToCloudinary(selectedFile);
         finalData.avatarUrl = cloudData.secure_url;
         finalData.avatarPublicId = cloudData.public_id;
       }
+
+      finalData.username = cleanUser.toLowerCase().replace(/\s/g, ''); // Ensure consistent format
+
       await addTeacher(finalData);
       closeModals();
       resetForm();
@@ -235,15 +256,15 @@ const Teachers = () => {
               <h3>Login Credentials</h3>
               <div className="section-grid">
                 <div className="form-group">
-                  <label>Custom Username</label>
-                  <input name="username" value={formData.username} onChange={handleInputChange} placeholder="Default: Name" />
+                  <label>Username *</label>
+                  <input name="username" value={formData.username} onChange={handleInputChange} placeholder="Unique username" required />
                 </div>
                 <div className="form-group">
-                  <label>Personal Login Password</label>
-                  <input name="password" value={formData.password} onChange={handleInputChange} placeholder="Default: 121212" />
+                  <label>Personal Login Password *</label>
+                  <input name="password" value={formData.password} onChange={handleInputChange} placeholder="Set password" required />
                 </div>
               </div>
-              <p className="field-note" style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px' }}>If username is not added, the teacher's name will be used.</p>
+              <p className="field-note" style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px' }}>Username and Password are now mandatory for institutional security.</p>
             </div>
           </div>
 

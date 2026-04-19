@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { User, Phone, MapPin, Edit2, Trash2, MessageSquare, Briefcase, Calendar, Heart, ChevronLeft } from 'lucide-react';
-import { getRole, ROLES } from '../services/auth';
+import { getRole, ROLES, isUsernameTaken } from '../services/auth';
 import { updateTeacher, deleteTeacher } from '../services/teacherService';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { useHeader } from '../hooks/useHeader';
@@ -99,11 +99,31 @@ const TeacherDetail = ({ teacherId: propId }) => {
     setSaveLoading(true);
     try {
       let finalData = { ...editFormData };
+
+      // 0. Validate required credentials
+      const cleanUser = (finalData.username || "").trim();
+      if (!cleanUser || !finalData.password) {
+        alert("Username and Password are required for teacher accounts.");
+        setSaveLoading(false);
+        return;
+      }
+
+      // 1. Check for unique username (excluding self)
+      const taken = await isUsernameTaken(cleanUser, teacher.id);
+      if (taken) {
+        alert(`The username "${cleanUser}" is already taken by another user.`);
+        setSaveLoading(false);
+        return;
+      }
+
       if (selectedFile) {
         const cloudData = await uploadToCloudinary(selectedFile);
         finalData.avatarUrl = cloudData.secure_url;
         finalData.avatarPublicId = cloudData.public_id;
       }
+
+      finalData.username = cleanUser.toLowerCase().replace(/\s/g, ''); // Ensure consistent format
+
       await updateTeacher(teacher.id, finalData);
       setIsEditModalOpen(false);
     } catch (error) {
@@ -306,14 +326,15 @@ const TeacherEditForm = ({ formData, setFormData, setSelectedFile, previewUrl })
         <h3>Login Credentials</h3>
         <div className="section-grid">
           <div className="form-group">
-            <label>Custom Username</label>
-            <input name="username" value={formData.username || ''} onChange={handleInputChange} placeholder="Default: Name" />
+            <label>Username *</label>
+            <input name="username" value={formData.username || ''} onChange={handleInputChange} placeholder="Unique username" required />
           </div>
           <div className="form-group">
-            <label>Personal Password</label>
-            <input name="password" value={formData.password || ''} onChange={handleInputChange} placeholder="Institutional Default" />
+            <label>Personal Password *</label>
+            <input name="password" value={formData.password || ''} onChange={handleInputChange} placeholder="Set password" required />
           </div>
         </div>
+        <p className="field-note" style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px' }}>Username and Password are now mandatory for security.</p>
       </div>
     </div>
   );

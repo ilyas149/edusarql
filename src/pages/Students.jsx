@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, User } from 'lucide-react';
 import { addStudent } from '../services/studentService';
 import { uploadToCloudinary } from '../services/cloudinary';
-import { getRole, ROLES } from '../services/auth';
+import { getRole, ROLES, isUsernameTaken } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import Modal from '../components/Modal';
 import '../styles/Students.css';
@@ -92,6 +92,22 @@ const Students = () => {
     try {
       let finalData = { ...formData };
       
+      // 0. Validate required credentials
+      const cleanUser = (finalData.username || "").trim();
+      if (!cleanUser || !finalData.password) {
+        alert("Username and Password are required for registration.");
+        setUploadLoading(false);
+        return;
+      }
+
+      // 1. Check for unique username
+      const taken = await isUsernameTaken(cleanUser);
+      if (taken) {
+        alert(`The username "${cleanUser}" is already taken. Please use a unique one.`);
+        setUploadLoading(false);
+        return;
+      }
+
       if (selectedFile) {
         const cloudData = await uploadToCloudinary(selectedFile);
         finalData.avatarUrl = cloudData.secure_url;
@@ -100,10 +116,11 @@ const Students = () => {
         finalData.avatarPublicId = null;
       }
 
+      finalData.username = cleanUser.toLowerCase().replace(/\s/g, ''); // Ensure consistent format
+
       await addStudent(finalData);
       closeModals();
       resetForm();
-// No refresh needed with onSnapshot
     } catch (error) {
       console.error("Error saving student:", error);
       alert("Failed to save student. Check console for details.");
@@ -325,16 +342,16 @@ const Students = () => {
             <h3>Login Credentials</h3>
             <div className="section-grid">
               <div className="form-group">
-                <label>Custom Username</label>
-                <input name="username" value={formData.username} onChange={handleInputChange} placeholder="Default: student name" />
+                <label>Username *</label>
+                <input name="username" value={formData.username} onChange={handleInputChange} placeholder="Unique username" required />
               </div>
               <div className="form-group">
-                <label>Student Password</label>
-                <input name="password" value={formData.password} onChange={handleInputChange} placeholder="Default: 111111" />
+                <label>Student Password *</label>
+                <input name="password" value={formData.password} onChange={handleInputChange} placeholder="Set student password" required />
               </div>
             </div>
-            <p className="field-note">If username is not added, the student's name will be used as the username.</p>
-          </div>
+            <p className="field-note">Username and Password are used for both Student and Parent access.</p>
+</div>
 
           <div className="modal-actions">
             <button type="button" className="cancel-btn" onClick={closeModals}>Cancel</button>

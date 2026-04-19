@@ -121,7 +121,7 @@
 
 @media (max-width: 768px) {
   .mobile-toggle-btn {
-    display: none !important;
+    display: flex !important;
   }
   .content-header {
     padding-left: 12px;

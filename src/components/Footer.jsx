@@ -1,4 +1,4 @@
-import { Phone, Shield, Heart, Globe } from 'lucide-react';
+import { Phone, Shield, Heart, Globe, MessageCircle } from 'lucide-react';
 import '../styles/Footer.css';
 
 const Footer = ({ variant = 'default' }) => {
@@ -36,13 +36,15 @@ const Footer = ({ variant = 'default' }) => {
     return (
       <div className="footer-login-content">
         <div className="login-footer-divider"></div>
-        <div className="footer-support-minimal">
-          <p className="powered-text-mini">Powered by <span>SARQL</span></p>
-          <div className="support-link-item">
-            <Globe size={12} />
-            <a href="https://team.sarql.vercel.app" target="_blank" rel="noopener noreferrer">team.sarql.vercel.app</a>
+        <div className="footer-elegant-layout mini">
+          <div className="footer-info-side" style={{ alignItems: 'center', width: '100%', textAlign: 'center' }}>
+            <div className="info-top">
+              <p>Powered by <span>SARQL</span></p>
+            </div>
+            <div className="info-copyright-mini">
+              © {year} EduSarql. All Rights Reserved.
+            </div>
           </div>
-          <p className="copy-text-mini">© {year} EduSarql. All Rights Reserved.</p>
         </div>
       </div>
     );
@@ -50,27 +52,31 @@ const Footer = ({ variant = 'default' }) => {
 
   return (
     <footer className={`app-footer footer-${variant}`}>
-      <div className="footer-exact-container">
-        <div className="footer-branding-exact">
-          <p className="powered-exact">Powered by <span className="sarql-brand-exact">SARQL</span></p>
-          <p className="copyright-exact">© {year} EduSarql Institutional Portal. All Rights Reserved.</p>
-        </div>
-        
-        <div className="footer-contact-exact">
-          <div className="contact-col-exact">
-            <span className="contact-name-exact">Mhd Ilyas</span>
-            <a href="tel:8086754094" className="contact-phone-exact">8086754094</a>
+      <div className="footer-elegant-layout">
+        <div className="footer-horizontal-main">
+          <div className="footer-logo-side">
+            <img src="/img/logo.png" alt="Logo" />
           </div>
-          <div className="contact-divider-exact">|</div>
-          <div className="contact-col-exact">
-            <span className="contact-name-exact">Ansal</span>
-            <a href="tel:7558811574" className="contact-phone-exact">7558811574</a>
+          <div className="footer-info-side">
+            <div className="info-top">
+              <p>Powered by <span>SARQL</span></p>
+            </div>
+            <div className="info-middle">
+              <div className="help-support-row">
+                <a href="https://wa.me/918086754094" target="_blank" rel="noopener noreferrer" className="wa-contact-link">
+                  <MessageCircle size={14} />
+                  <span>Help & Support</span>
+                </a>
+              </div>
+            </div>
+            <div className="info-bottom">
+              <Globe size={12} />
+              <a href="https://team.sarql.vercel.app" target="_blank" rel="noopener noreferrer">team.sarql.vercel.app</a>
+            </div>
           </div>
         </div>
-
-        <div className="footer-link-box-exact">
-          <Globe size={11} className="globe-icon-exact" />
-          <a href="https://team.sarql.vercel.app" target="_blank" rel="noopener noreferrer">team.sarql.vercel.app</a>
+        <div className="footer-bottom-copyright">
+          © {year} EduSarql Institutional Portal. All Rights Reserved.
         </div>
       </div>
     </footer>

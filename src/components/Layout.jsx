@@ -50,7 +50,7 @@ const Layout = () => {
       <main className="main-content">
         <header className="content-header">
           <div className="header-left-side">
-            <button className="mobile-toggle-btn" onClick={() => setIsSidebarOpen(true)} style={{ display: 'flex' }}>
+            <button className="mobile-toggle-btn" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={20} />
             </button>
             {backAction}
