@@ -50,32 +50,27 @@ const Footer = ({ variant = 'default' }) => {
 
   return (
     <footer className={`app-footer footer-${variant}`}>
-      <div className="footer-container">
-        <div className="footer-left">
-          <p className="powered-text">Powered by <span>SARQL</span></p>
-          <p className="copy-text">© {year} EduSarql. All Rights Reserved.</p>
+      <div className="footer-exact-container">
+        <div className="footer-branding-exact">
+          <p className="powered-exact">Powered by <span className="sarql-brand-exact">SARQL</span></p>
+          <p className="copyright-exact">© {year} EduSarql Institutional Portal. All Rights Reserved.</p>
         </div>
         
-        <div className="footer-right">
-          <div className="support-card">
-            <div className="support-details">
-              <span className="support-title">Help & Support</span>
-              <div className="person-grid">
-                <div className="support-person">
-                  <span className="person-name">Mhd Ilyas:</span>
-                  <a href="tel:8086754094" className="person-phone">8086754094</a>
-                </div>
-                <div className="support-person">
-                  <span className="person-name">Ansal:</span>
-                  <a href="tel:7558811574" className="person-phone">7558811574</a>
-                </div>
-              </div>
-              <div className="footer-website">
-                <Globe size={12} />
-                <a href="https://team.sarql.vercel.app" target="_blank" rel="noopener noreferrer">team.sarql.vercel.app</a>
-              </div>
-            </div>
+        <div className="footer-contact-exact">
+          <div className="contact-col-exact">
+            <span className="contact-name-exact">Mhd Ilyas</span>
+            <a href="tel:8086754094" className="contact-phone-exact">8086754094</a>
           </div>
+          <div className="contact-divider-exact">|</div>
+          <div className="contact-col-exact">
+            <span className="contact-name-exact">Ansal</span>
+            <a href="tel:7558811574" className="contact-phone-exact">7558811574</a>
+          </div>
+        </div>
+
+        <div className="footer-link-box-exact">
+          <Globe size={11} className="globe-icon-exact" />
+          <a href="https://team.sarql.vercel.app" target="_blank" rel="noopener noreferrer">team.sarql.vercel.app</a>
         </div>
       </div>
     </footer>

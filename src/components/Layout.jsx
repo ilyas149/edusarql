@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import PullToRefresh from './PullToRefresh';
@@ -11,19 +11,9 @@ import '../styles/BottomNav.css';
 
 const Layout = () => {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const { headerAction, headerTitle, backAction } = useHeader();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
-  // Determine if we are in an "immersive" view (detail page, chat, or when a specific modal is open via URL)
-  // We check for pathnames like /chat AND for query parameters like ?studentId=... or ?modal=...
-  const isSpecificViewActive = 
-    location.pathname.includes('/chat') || 
-    location.pathname.includes('/live') ||
-    searchParams.has('studentId') ||
-    searchParams.has('teacherId') ||
-    searchParams.has('batchId') ||
-    searchParams.get('modal') === 'true';
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
@@ -58,23 +48,23 @@ const Layout = () => {
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
       
       <main className="main-content">
-        {!isSpecificViewActive && (
-          <header className="content-header">
-            <div className="header-left-side">
-              {/* Mobile toggle hidden as per request */}
-              {backAction}
-              <div className="header-title">
-                <h1>{headerTitle || getTitle()}</h1>
-              </div>
+        <header className="content-header">
+          <div className="header-left-side">
+            <button className="mobile-toggle-btn" onClick={() => setIsSidebarOpen(true)} style={{ display: 'flex' }}>
+              <Menu size={20} />
+            </button>
+            {backAction}
+            <div className="header-title">
+              <h1>{headerTitle || getTitle()}</h1>
             </div>
-            <div className="header-actions">
-              {headerAction}
-              <div className="notification-badge glass">
-                <Bell size={16} />
-              </div>
+          </div>
+          <div className="header-actions">
+            {headerAction}
+            <div className="notification-badge glass">
+              <Bell size={16} />
             </div>
-          </header>
-        )}
+          </div>
+        </header>
 
         <div className="page-container">
           <PullToRefresh onRefresh={handleRefresh}>
@@ -83,12 +73,12 @@ const Layout = () => {
         </div>
       </main>
 
-      {!isSpecificViewActive && <BottomNav />}
+      <BottomNav />
 
       <style>{`
         @media (max-width: 768px) {
           .main-content {
-            padding-bottom: ${isSpecificViewActive ? '0' : '68px'}; /* Space for bottom nav only if visible */
+            padding-bottom: 68px; /* Space for bottom nav */
           }
           .page-container {
             padding: 0;

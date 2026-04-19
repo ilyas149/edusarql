@@ -1,14 +1,14 @@
 .modal-overlay {
   position: fixed;
-  top: 52px; /* Header height */
-  bottom: 52px; /* BottomNav height */
-  left: 0;
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-width); /* Respect Sidebar on Desktop */
   right: 0;
   background: rgba(15, 23, 42, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 500; /* Below BottomNav (1000) but above content */
+  z-index: 1005; /* Above Header (1001) but below Sidebar (1100) */
   backdrop-filter: blur(8px);
   padding: 16px;
 }
@@ -170,4 +170,55 @@
   display: block;
   border-radius: 8px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Fullscreen Variant Overrides */
+.modal-overlay.fullscreen-mode {
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-width); /* Desktop Sidebar width */
+  background: #f8fafc; /* Match dashboard BG */
+  padding: 0;
+  z-index: 400; /* Behind actual Sidebar (1100) but above content */
+  backdrop-filter: none;
+}
+
+.modal-content.fullscreen {
+  max-width: 100%;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  border: none;
+  padding: 24px;
+  background: #f8fafc;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay:not(.fullscreen-mode) {
+    top: 52px;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    z-index: 500;
+  }
+
+  .modal-overlay.fullscreen-mode {
+    left: 0;
+    top: 52px; /* Mobile Header */
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px)); /* Mobile BottomNav */
+    z-index: 400;
+  }
+  
+  .modal-content.fullscreen {
+    padding: 12px;
+    height: 100%;
+    max-height: none;
+  }
 }

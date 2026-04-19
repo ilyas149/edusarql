@@ -29,6 +29,7 @@ const BottomNav = () => {
     { name: 'Home', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Report', icon: UserSquare2, path: `/dashboard/students/${studentId}` },
     { name: 'Time', icon: Calendar, path: '/dashboard/timetable' },
+    { name: 'Teachers', icon: Users, path: '/dashboard/teachers' },
   ];
 
   const links = role === ROLES.STUDENT || role === ROLES.PARENT ? studentLinks : adminTeacherLinks;

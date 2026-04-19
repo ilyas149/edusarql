@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logout, getRole, ROLES } from '../services/auth';
+import { logout, getRole, ROLES, getStudentId, getTeacherId } from '../services/auth';
 import {
   Users,
   UserSquare2,
@@ -19,6 +19,22 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const role = getRole();
   const { students, teachers, batches } = useData();
+  const studentId = getStudentId();
+  const teacherId = getTeacherId();
+
+  const getUserName = () => {
+    if (role === ROLES.STUDENT || role === ROLES.PARENT) {
+      const student = students.find(s => s.id === studentId);
+      return student ? student.name : role;
+    }
+    if (role === ROLES.TEACHER) {
+      const teacher = teachers.find(t => t.id === teacherId);
+      return teacher ? teacher.name : role;
+    }
+    return role;
+  };
+
+  const userName = getUserName();
 
   const stats = [
     { label: 'Students', count: students.length, color: '#3b82f6' },
@@ -28,11 +44,11 @@ const Dashboard = () => {
 
   const tabs = [
     { name: 'Teachers', icon: Users, path: '/dashboard/teachers', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
-    { name: 'Students', icon: UserSquare2, path: '/dashboard/students', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
-    { name: 'Batches', icon: Layers, path: '/dashboard/batches', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
-    { name: 'Attendance', icon: ClipboardCheck, path: '/dashboard/attendance', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
+    { name: 'Students', icon: UserSquare2, path: '/dashboard/students', roles: [ROLES.ADMIN, ROLES.TEACHER] },
+    { name: 'Batches', icon: Layers, path: '/dashboard/batches', roles: [ROLES.ADMIN, ROLES.TEACHER] },
+    { name: 'Attendance', icon: ClipboardCheck, path: '/dashboard/attendance', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Timetable', icon: Calendar, path: '/dashboard/timetable', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
-    { name: 'Exams', icon: GraduationCap, path: '/dashboard/exams', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT, ROLES.PARENT] },
+    { name: 'Exams', icon: GraduationCap, path: '/dashboard/exams', roles: [ROLES.ADMIN, ROLES.TEACHER] },
   ];
 
   const filteredTabs = tabs.filter(tab => tab.roles.includes(role));
@@ -49,7 +65,7 @@ const Dashboard = () => {
               <img src="/img/logo.png" alt="Logo" className="dash-logo-mobile" />
             </div>
             <div className="welcome-text">
-              <h1>Hello, {role}</h1>
+              <h1>Hello, {userName}</h1>
               <p>Welcome back to EduSarql institutional portal.</p>
               {role === ROLES.ADMIN && (
                 <button 
@@ -112,7 +128,15 @@ const Dashboard = () => {
       </div>
 
       <style>{`
-        .dashboard-page { max-width: 1400px; margin: 0 auto; animation: fadeIn 0.4s ease-out; padding: 16px; }
+        .dashboard-page { 
+          max-width: 1400px; 
+          margin: 0 auto; 
+          animation: fadeIn 0.4s ease-out; 
+          padding: 16px; 
+          display: flex;
+          flex-direction: column;
+          min-height: calc(100vh - 40px);
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .dashboard-header { margin-bottom: 24px; padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px rgba(31, 38, 135, 0.03); }
@@ -205,12 +229,14 @@ const Dashboard = () => {
           }
           .dashboard-page {
             padding: 16px;
+            padding-bottom: 0px;
+            min-height: calc(100vh - 84px);
           }
         }
 
         .dashboard-footer-section {
-          margin-top: 40px;
-          padding-top: 24px;
+          margin-top: auto;
+          padding-top: 40px;
           border-top: 1px solid #f1f5f9;
           opacity: 0.8;
           padding-bottom: 24px;
@@ -218,9 +244,10 @@ const Dashboard = () => {
 
         @media (max-width: 768px) {
            .dashboard-footer-section {
-             margin-top: 32px;
+             margin-top: auto;
              border-top: none;
              padding-top: 0;
+             padding-bottom: 12px;
            }
         }
       `}</style>

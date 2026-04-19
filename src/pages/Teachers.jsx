@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { User, Plus } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
@@ -8,6 +8,7 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import { addTeacher } from '../services/teacherService';
 import { useData } from '../context/DataContext';
 import TeacherDetail from './TeacherDetail';
+
 
 const Teachers = () => {
   const role = getRole();
@@ -20,9 +21,23 @@ const Teachers = () => {
   const isAddModalOpen = searchParams.get('modal') === 'add';
   const activeTeacherId = searchParams.get('teacherId');
 
-  const openAddModal = useCallback(() => setSearchParams({ modal: 'add' }), [setSearchParams]);
-  const closeModals = () => setSearchParams({});
-  const openTeacherDetail = (id) => setSearchParams({ teacherId: id });
+  const openAddModal = React.useCallback(() => setSearchParams(prev => {
+    prev.set('modal', 'add');
+    prev.delete('teacherId');
+    return prev;
+  }), [setSearchParams]);
+
+  const closeModals = React.useCallback(() => setSearchParams(prev => {
+    prev.delete('modal');
+    prev.delete('teacherId');
+    return prev;
+  }), [setSearchParams]);
+
+  const openTeacherDetail = React.useCallback((id) => setSearchParams(prev => {
+    prev.set('teacherId', id);
+    prev.delete('modal');
+    return prev;
+  }), [setSearchParams]);
   const [formData, setFormData] = useState({
     name: '',
     department: '',
@@ -246,6 +261,7 @@ const Teachers = () => {
         isOpen={!!activeTeacherId}
         onClose={closeModals}
         title="Teacher Details"
+        variant="fullscreen"
       >
         {activeTeacherId && <TeacherDetail teacherId={activeTeacherId} />}
       </Modal>

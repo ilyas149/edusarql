@@ -6,8 +6,7 @@ import {
   CheckCircle2, LayoutGrid, ArrowLeft, Trash2, Info, User, ChevronLeft
 } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
-import { getRole, ROLES } from '../services/auth';
-
+import { getRole, ROLES, getStudentId } from '../services/auth';
 import { useData } from '../context/DataContext';
 
 const TIMETABLE_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -16,8 +15,9 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 const Timetable = () => {
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;
+  const isStudent = role === ROLES.STUDENT;
   const { setHeaderAction, setBackAction } = useHeader();
-  const { batches, teachers, subjects, periods: definedPeriods } = useData();
+  const { batches, teachers, subjects, periods: definedPeriods, students } = useData();
 
   const [viewMode, setViewMode] = useState('overview');
   const [selectedDay, setSelectedDay] = useState(() => {
@@ -39,6 +39,7 @@ const Timetable = () => {
   const isDownRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
+  const autoRedirectedRef = useRef(false);
 
   const dragHandlers = useMemo(() => {
     return {
@@ -86,6 +87,23 @@ const Timetable = () => {
     Promise.resolve().then(() => fetchData()); 
   }, [fetchData]);
 
+  // Auto-redirect student to their batch
+  useEffect(() => {
+    if (isStudent && students.length > 0 && !autoRedirectedRef.current) {
+      const studentId = getStudentId();
+      const currentStudent = students.find(s => s.id === studentId);
+      if (currentStudent && currentStudent.batchId) {
+        autoRedirectedRef.current = true;
+        // Delay state updates to avoid cascading sync renders flagged by lint
+        Promise.resolve().then(() => {
+          setSelectedBatchId(currentStudent.batchId);
+          setEditData(allTimetables[currentStudent.batchId] || {});
+          setViewMode('planner');
+        });
+      }
+    }
+  }, [isStudent, students, allTimetables]);
+
   const openBatchPlanner = (batchId) => {
     setSelectedBatchId(batchId);
     setEditData(allTimetables[batchId] || {});
@@ -122,7 +140,7 @@ const Timetable = () => {
   }, [selectedBatchId, editData]);
 
   useEffect(() => {
-    if (viewMode !== 'overview') {
+    if (viewMode !== 'overview' && !isStudent) {
       setBackAction(
         <button className="back-round-btn" onClick={() => setViewMode('overview')} title="Back">
           <ChevronLeft size={20} />
@@ -159,7 +177,7 @@ const Timetable = () => {
       setHeaderAction(null);
       setBackAction(null);
     };
-  }, [viewMode, selectedDay, isEditing, loading, isAdmin, setHeaderAction, setBackAction, selectedBatchId, editData, handleSave]);
+  }, [viewMode, selectedDay, isEditing, loading, isAdmin, isStudent, setHeaderAction, setBackAction, selectedBatchId, editData, handleSave]);
 
   return (
     <div className="timetable-page">

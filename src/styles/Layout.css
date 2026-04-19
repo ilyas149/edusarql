@@ -108,6 +108,17 @@
   z-index: 999;
 }
 
+@media (min-width: 769px) {
+  .sidebar {
+    display: flex !important;
+    position: sticky !important;
+    top: 0 !important;
+    transform: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
 @media (max-width: 768px) {
   .mobile-toggle-btn {
     display: none !important;

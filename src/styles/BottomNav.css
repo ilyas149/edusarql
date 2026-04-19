@@ -52,9 +52,8 @@
 /* iOS Safe Area Overrides */
 @media (max-width: 768px) {
   .bottom-nav {
-    height: 52px;
+    height: calc(52px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-sizing: content-box; /* Ensures icons center in the 52px area */
     align-items: center;
     padding-top: 0;
   }

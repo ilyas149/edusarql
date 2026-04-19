@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, serverTimestamp
 import { Plus, Trash2, Clock, Save, X, Edit3, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useHeader } from '../hooks/useHeader';
 import { getRole, ROLES } from '../services/auth';
+import Modal from '../components/Modal';
 
 const Periods = () => {
   const role = getRole();
@@ -83,51 +84,52 @@ const Periods = () => {
         </div>
       )}
 
-      {isAdding && (
-        <div className="period-modal-overlay">
-           <form className="period-form glass" onSubmit={handleSubmit}>
-              <div className="form-header">
-                 <h2>{editingId ? 'Edit Period Definition' : 'New Period Definition'}</h2>
-                 <button type="button" onClick={() => setIsAdding(false)}><X size={20}/></button>
-              </div>
-              <div className="form-body">
-                 <div className="input-field">
-                    <label>Period Identifier</label>
-                    <input 
-                      required 
-                      placeholder="e.g. Period 1" 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
-                 </div>
-                 <div className="time-grid">
-                    <div className="input-field">
-                       <label>Commencement</label>
-                       <input 
-                         type="time" 
-                         required 
-                         value={formData.startTime} 
-                         onChange={(e) => setFormData({...formData, startTime: e.target.value})}
-                       />
-                    </div>
-                    <div className="input-field">
-                       <label>Conclusion</label>
-                       <input 
-                         type="time" 
-                         required 
-                         value={formData.endTime} 
-                         onChange={(e) => setFormData({...formData, endTime: e.target.value})}
-                       />
-                    </div>
-                 </div>
-              </div>
-              <button className="submit-btn" disabled={loading}>
+      <Modal 
+        isOpen={isAdding} 
+        onClose={() => setIsAdding(false)} 
+        title={editingId ? 'Edit Period Definition' : 'New Period Definition'}
+      >
+         <form className="modal-form" onSubmit={handleSubmit}>
+            <div className="form-body">
+               <div className="input-field">
+                  <label>Period Identifier</label>
+                  <input 
+                    required 
+                    placeholder="e.g. Period 1" 
+                    value={formData.name} 
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+               </div>
+               <div className="time-grid">
+                  <div className="input-field">
+                     <label>Commencement</label>
+                     <input 
+                       type="time" 
+                       required 
+                       value={formData.startTime} 
+                       onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                     />
+                  </div>
+                  <div className="input-field">
+                     <label>Conclusion</label>
+                     <input 
+                       type="time" 
+                       required 
+                       value={formData.endTime} 
+                       onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                     />
+                  </div>
+               </div>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="submit" className="save-btn" disabled={loading}>
                  {loading ? <Loader2 className="spin" size={18}/> : <Save size={18}/>}
                  <span>{editingId ? 'Secure Update' : 'Initialize Period'}</span>
               </button>
-           </form>
-        </div>
-      )}
+            </div>
+         </form>
+      </Modal>
 
       {loading && !isAdding ? (
          <div className="loader">Hydrating Temporal Data...</div>
@@ -201,19 +203,13 @@ const Periods = () => {
         .row-action.edit:hover { color: var(--primary); border-color: var(--primary); background: #fff1f2; }
         .row-action.delete:hover { color: #ef4444; border-color: #ef4444; background: #fef2f2; }
 
-        .period-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .period-form { background: white; width: 100%; max-width: 400px; padding: 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .form-header h2 { font-size: 1.1rem; color: #1e293b; }
-        .form-header button { background: none; border: none; color: #94a3b8; cursor: pointer; }
-        
+
         .form-body { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
         .input-field { display: flex; flex-direction: column; gap: 6px; }
         .input-field label { font-size: 0.75rem; font-weight: 700; color: #64748b; }
         .input-field input { padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-weight: 600; outline: none; }
         .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-        .submit-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -221,9 +217,12 @@ const Periods = () => {
 
         @media (max-width: 600px) {
            .list-columns { display: none; }
-           .period-row { grid-template-columns: 1fr auto; }
-           .p-temporal { flex-direction: column; align-items: flex-start; gap: 4px; }
-           .t-arrow { display: none; }
+           .period-row { grid-template-columns: 1fr auto auto; gap: 8px; padding: 12px 12px; }
+           .p-temporal { flex-direction: row; align-items: center; gap: 4px; }
+           .t-time { font-size: 0.75rem; font-weight: 800; }
+           .t-arrow { display: block; width: 10px; height: 10px; opacity: 0.5; }
+           .p-mgmt { gap: 4px; }
+           .row-action { width: 28px; height: 28px; }
         }
       `}</style>
     </div>

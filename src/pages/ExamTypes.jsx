@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { collection, addDoc, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Plus, Trash2, BookOpen, Calendar, AlignLeft, Pencil, X } from 'lucide-react';
+import { ROLES } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { useData } from '../context/DataContext';
+import Modal from '../components/Modal';
 
 const ExamTypes = () => {
   const { setHeaderAction } = useHeader();
@@ -84,31 +86,32 @@ const ExamTypes = () => {
 
   return (
     <div className="institutional-page">
-      {showForm && (
-        <div className="form-card glass fadeIn">
-          <h3>{isEditing ? <Pencil size={18} /> : <Plus size={18} />} {isEditing ? 'Modify Specification' : 'New Exam Specification'}</h3>
-          <form onSubmit={handleSubmit} className="standard-form">
-            <div className="form-grid">
-              <div className="f-group">
-                <label>Exam Title (e.g. Midterm 2029)</label>
-                <div className="i-wrap"><BookOpen size={16}/><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Enter institutional title..." required /></div>
-              </div>
-              <div className="f-group">
-                <label>Academic Year</label>
-                <div className="i-wrap"><Calendar size={16}/><input type="text" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="e.g. 2026" required /></div>
-              </div>
+      <Modal 
+        isOpen={showForm} 
+        onClose={handleToggleForm} 
+        title={isEditing ? 'Modify Specification' : 'New Exam Specification'}
+      >
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Exam Title (e.g. Midterm 2029)</label>
+              <div className="i-wrap"><BookOpen size={16}/><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Enter institutional title..." required /></div>
             </div>
-            <div className="f-group full">
-              <label>Institutional Scope / Description</label>
-              <div className="i-wrap"><AlignLeft size={16}/><textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Define assessment objectives and archival scope..." /></div>
+            <div className="form-group">
+              <label>Academic Year</label>
+              <div className="i-wrap"><Calendar size={16}/><input type="text" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="e.g. 2026" required /></div>
             </div>
-            <div className="modal-actions-group">
-               <button type="button" className="m-btn-alt" onClick={handleToggleForm}>Discard</button>
-               <button type="submit" className="submit-btn" disabled={loading}>{loading ? 'Syncing...' : (isEditing ? 'Save Modifications' : 'Register Exam Category')}</button>
-            </div>
-          </form>
-        </div>
-      )}
+          </div>
+          <div className="form-group full">
+            <label>Institutional Scope / Description</label>
+            <div className="i-wrap"><AlignLeft size={16}/><textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Define assessment objectives and archival scope..." /></div>
+          </div>
+          <div className="modal-actions">
+             <button type="button" className="cancel-btn" onClick={handleToggleForm}>Discard</button>
+             <button type="submit" className="save-btn" disabled={loading}>{loading ? 'Syncing...' : (isEditing ? 'Save Modifications' : 'Register Exam Category')}</button>
+          </div>
+        </form>
+      </Modal>
 
       <div className="list-container glass fadeIn">
          <div className="list-header">
@@ -148,48 +151,13 @@ const ExamTypes = () => {
         .title-area p { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
         .p-icon { color: var(--primary); }
 
-        /* CLASSIC CENTERED MODAL */
-        .form-card { 
-          position: fixed !important; 
-          top: 50% !important; 
-          left: 50% !important; 
-          transform: translate(-50%, -50%) !important; 
-          width: 90% !important; 
-          max-width: 480px !important; 
-          background: white !important; 
-          padding: 32px !important; 
-          border-radius: 20px !important; 
-          border: 1px solid #e2e8f0 !important; 
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; 
-          z-index: 1000 !important; 
-        }
 
-        /* MODAL OVERLAY */
-        .institutional-page::after {
-          content: '';
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(15, 23, 42, 0.4);
-          backdrop-filter: blur(4px);
-          z-index: 100 !important;
-          display: ${showForm ? 'block' : 'none'};
-        }
-        .form-card { z-index: 1000 !important; }
-
-        .form-card h3 { display: flex; align-items: center; gap: 10px; font-size: 1rem; color: var(--primary); margin-bottom: 24px; font-weight: 900; }
         .form-grid { display: flex; flex-direction: column; gap: 4px; }
-        .f-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .f-group label { font-size: 0.7rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
         .i-wrap { position: relative; }
         .i-wrap svg { position: absolute; left: 14px; top: 14px; color: #cbd5e1; }
         .i-wrap input, .i-wrap textarea { width: 100%; padding: 12px 14px 12px 42px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 0.85rem; font-weight: 700; color: #334155; outline: none; background: #f8fafc; transition: 0.2s; }
         .i-wrap input:focus, .i-wrap textarea:focus { border-color: var(--primary); background: white; }
         .i-wrap textarea { min-height: 80px; padding-top: 14px; resize: none; }
-        .modal-actions-group { display: flex; gap: 12px; margin-top: 24px; }
-        .m-btn-alt { flex: 1; padding: 15px; background: #f1f5f9; color: #64748b; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .m-btn-alt:hover { background: #e2e8f0; }
-        .submit-btn { flex: 2; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2); }
 
         /* LIST DESIGN */
         .list-container { background: white; border-radius: 20px; border: 1px solid #f1f5f9; overflow: hidden; }
@@ -223,6 +191,15 @@ const ExamTypes = () => {
         .act-btn:hover { transform: scale(1.1); }
 
         .empty-row { padding: 40px; text-align: center; color: #94a3b8; font-weight: 600; font-size: 0.85rem; }
+
+        @media (max-width: 600px) {
+           .list-header { display: none; }
+           .list-row { grid-template-columns: 1fr auto; gap: 12px; padding: 14px 16px; }
+           .r-col.year { display: none; }
+           .r-avatar { width: 32px; height: 32px; font-size: 0.9rem; }
+           .r-info h4 { font-size: 0.85rem; }
+           .r-info p { font-size: 0.7rem; }
+        }
 
         .fadeIn { animation: fadeIn 0.35s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

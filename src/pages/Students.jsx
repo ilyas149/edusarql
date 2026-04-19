@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, User } from 'lucide-react';
 import { addStudent } from '../services/studentService';
@@ -24,9 +24,23 @@ const Students = () => {
   const isAddModalOpen = searchParams.get('modal') === 'add';
   const activeStudentId = searchParams.get('studentId');
 
-  const openAddModal = useCallback(() => setSearchParams({ modal: 'add' }), [setSearchParams]);
-  const closeModals = () => setSearchParams({});
-  const openStudentDetail = (id) => setSearchParams({ studentId: id });
+  const openAddModal = React.useCallback(() => setSearchParams(prev => {
+    prev.set('modal', 'add');
+    prev.delete('studentId');
+    return prev;
+  }), [setSearchParams]);
+
+  const closeModals = React.useCallback(() => setSearchParams(prev => {
+    prev.delete('modal');
+    prev.delete('studentId');
+    return prev;
+  }), [setSearchParams]);
+
+  const openStudentDetail = React.useCallback((id) => setSearchParams(prev => {
+    prev.set('studentId', id);
+    prev.delete('modal');
+    return prev;
+  }), [setSearchParams]);
 
   
   // Form State
@@ -336,6 +350,7 @@ const Students = () => {
         isOpen={!!activeStudentId}
         onClose={closeModals}
         title="Student Details"
+        variant="fullscreen"
       >
         {activeStudentId && <StudentDetail studentId={activeStudentId} />}
       </Modal>

@@ -15,7 +15,8 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import { logout, getRole, ROLES, getStudentId } from '../services/auth';
+import { logout, getRole, ROLES, getStudentId, getTeacherId } from '../services/auth';
+import { useData } from '../context/DataContext';
 import '../styles/Sidebar.css';
 
 import Footer from './Footer';
@@ -23,14 +24,30 @@ import Footer from './Footer';
 const Sidebar = ({ isOpen, onClose }) => {
   const role = getRole();
   const studentId = getStudentId();
+  const teacherId = getTeacherId();
+  const { students, teachers } = useData();
+
+  const getUserName = () => {
+    if (role === ROLES.STUDENT || role === ROLES.PARENT) {
+      const student = students.find(s => s.id === studentId);
+      return student ? student.name : role;
+    }
+    if (role === ROLES.TEACHER) {
+      const teacher = teachers.find(t => t.id === teacherId);
+      return teacher ? teacher.name : role;
+    }
+    return role;
+  };
+
+  const userName = getUserName();
 
   const primarySection = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: [ROLES.ADMIN, ROLES.TEACHER] },
-    { name: 'Teachers', icon: Users, path: '/dashboard/teachers', roles: [ROLES.ADMIN, ROLES.TEACHER] },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT] },
+    { name: 'Teachers', icon: Users, path: '/dashboard/teachers', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT] },
     { name: 'Students', icon: UserSquare2, path: '/dashboard/students', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Batches', icon: Layers, path: '/dashboard/batches', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Attendance', icon: ClipboardCheck, path: '/dashboard/attendance', roles: [ROLES.ADMIN, ROLES.TEACHER] },
-    { name: 'Timetable', icon: Calendar, path: '/dashboard/timetable', roles: [ROLES.ADMIN, ROLES.TEACHER] },
+    { name: 'Timetable', icon: Calendar, path: '/dashboard/timetable', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT] },
     { name: 'Exams & Marks', icon: GraduationCap, path: '/dashboard/exams', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     // Scoped Record Link for Students/Parents
     { name: 'My Performance', icon: UserSquare2, path: `/dashboard/students/${studentId}`, roles: [ROLES.STUDENT, ROLES.PARENT] },
@@ -48,10 +65,10 @@ const Sidebar = ({ isOpen, onClose }) => {
       <div className="user-info">
         <div className="user-meta">
           <div className="avatar-small">
-            {role?.charAt(0)}
+            {userName?.charAt(0)}
           </div>
           <div className="user-details">
-            <p className="role-label">{role}</p>
+            <p className="role-label">{userName}</p>
             <p className="status-online">Online</p>
           </div>
         </div>

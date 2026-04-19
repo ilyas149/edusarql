@@ -39,11 +39,11 @@ function App() {
             <Route index element={<Dashboard />} />
             
             {/* Admin & Teacher Access (Read-Only for Teacher) */}
-            <Route path="teachers" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Teachers /></RoleRoute>} />
-            <Route path="teachers/:id" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><TeacherDetail /></RoleRoute>} />
+            <Route path="teachers" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT]}><Teachers /></RoleRoute>} />
+            <Route path="teachers/:id" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT]}><TeacherDetail /></RoleRoute>} />
             <Route path="students" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Students /></RoleRoute>} />
             <Route path="batches" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Batches /></RoleRoute>} />
-            <Route path="timetable" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Timetable /></RoleRoute>} />
+            <Route path="timetable" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT]}><Timetable /></RoleRoute>} />
             <Route path="exams" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Exams /></RoleRoute>} />
             <Route path="attendance" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Attendance /></RoleRoute>} />
             <Route path="admin-management" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminManagement /></RoleRoute>} />

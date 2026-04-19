@@ -6,7 +6,7 @@ import {
   User, Calendar, Edit2, Trash2,
   Phone, MapPin, GraduationCap, Heart, Users, MessageSquare,
   ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info,
-  FileDown, BookOpen, Trophy, ChevronDown, ChevronUp, RefreshCw
+  FileDown, BookOpen, Trophy, ChevronDown, ChevronUp, RefreshCw, Bell
 } from 'lucide-react';
 import { getRole, ROLES, getStudentId } from '../services/auth';
 import { updateStudent, deleteStudent } from '../services/studentService';
@@ -24,8 +24,9 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const StudentDetail = () => {
-  const { id } = useParams();
+const StudentDetail = ({ studentId: propId }) => {
+  const { id: routeId } = useParams();
+  const id = propId || routeId;
   const navigate = useNavigate();
   const role = getRole();
   const isAdmin = role === ROLES.ADMIN;
@@ -396,16 +397,16 @@ const StudentDetail = () => {
               <div className="data-grid-layout">
                 <div className="data-item"><label>Age</label><p>{student.age || 'N/A'}</p></div>
                 <div className="data-item"><label>Blood Group</label><p><Heart size={12} className="ico-red" /> {student.bloodGroup || 'N/A'}</p></div>
-                <div className="data-item"><label>House Name</label><p>{student.houseName || 'N/A'}</p></div>
-                <div className="data-item"><label>Place</label><p><MapPin size={12} /> {student.place || 'N/A'}</p></div>
+                <div className="data-item full-width"><label>House Name</label><p>{student.houseName || 'N/A'}</p></div>
+                <div className="data-item full-width"><label>Place</label><p><MapPin size={12} /> {student.place || 'N/A'}</p></div>
                 <div className="data-item full-width"><label>Full Address</label><p>{student.address || 'N/A'}</p></div>
               </div>
             </section>
-            <section className="profile-card"><div className="card-header"><GraduationCap size={16} /><h3>Academic Progress</h3></div><div className="data-grid-layout"><div className="data-item"><label>Batch</label><p>{batchName}</p></div><div className="data-item"><label>School Class</label><p>{student.schoolClass || 'N/A'}</p></div></div></section>
-            <section className="profile-card"><div className="card-header"><Users size={16} /><h3>Family Information</h3></div><div className="data-grid-layout"><div className="data-item"><label>Guardian</label><p>{student.guardianName || 'N/A'}</p></div><div className="data-item"><label>Mother</label><p>{student.motherName || 'N/A'}</p></div><div className="data-item"><label>Father's Job</label><p>{student.fatherJob || 'N/A'}</p></div></div></section>
-            <section className="profile-card">
+            <section className="profile-card"><div className="card-header"><GraduationCap size={16} /><h3>Academic Progress</h3></div><div className="data-grid-layout"><div className="data-item full-width"><label>Batch</label><p>{batchName}</p></div><div className="data-item full-width"><label>School Class</label><p>{student.schoolClass || 'N/A'}</p></div></div></section>
+            <section className="profile-card"><div className="card-header"><Users size={16} /><h3>Family Information</h3></div><div className="data-grid-layout"><div className="data-item full-width"><label>Guardian</label><p>{student.guardianName || 'N/A'}</p></div><div className="data-item full-width"><label>Mother</label><p>{student.motherName || 'N/A'}</p></div><div className="data-item full-width"><label>Father's Job</label><p>{student.fatherJob || 'N/A'}</p></div></div></section>
+            <section className="profile-card full-width-card">
               <div className="card-header"><Phone size={16} /><h3>Direct Contact</h3></div>
-              <div className="data-grid-layout">
+              <div className="data-grid-layout contact-grid">
                 <div className="data-item"><label>Guardian Phone</label><div className="contact-row"><p>{student.guardianPhone || 'N/A'}</p>{canContact && student.guardianPhone && <a href={`tel:${student.guardianPhone}`} className="contact-icon-btn call"><Phone size={14} /></a>}</div></div>
                 <div className="data-item"><label>Guardian WhatsApp</label><div className="contact-row"><p>{student.guardianWhatsApp || student.guardianPhone || 'N/A'}</p>{canContact && <a href={`https://wa.me/${(student.guardianWhatsApp || student.guardianPhone).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="contact-icon-btn whatsapp"><MessageSquare size={14} /></a>}</div></div>
                 <div className="data-item"><label>Student Phone</label><div className="contact-row"><p>{student.studentPhone || 'N/A'}</p>{canContact && student.studentPhone && <a href={`tel:${student.studentPhone}`} className="contact-icon-btn call"><Phone size={14} /></a>}</div></div>
