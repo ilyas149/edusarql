@@ -19,6 +19,7 @@ import StaffAttendance from './pages/StaffAttendance';
 import { HeaderProvider } from './context/HeaderProvider';
 import { DataProvider } from './context/DataProvider';
 import { getRole, ROLES } from './services/auth';
+import CommandPalette from './components/CommandPalette';
 import './index.css';
 
 const RoleRoute = ({ children, allowedRoles }) => {
@@ -34,6 +35,7 @@ function App() {
     <HeaderProvider>
       <DataProvider>
         <Router>
+          <CommandPalette />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Layout />}>

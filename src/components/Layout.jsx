@@ -61,9 +61,6 @@ const Layout = () => {
           </div>
           <div className="header-actions">
             {headerAction}
-            <div className="notification-badge glass">
-              <Bell size={16} />
-            </div>
           </div>
         </header>
 

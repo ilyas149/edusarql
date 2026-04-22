@@ -4,8 +4,9 @@ import { setDoc, serverTimestamp, doc, getDoc, onSnapshot } from 'firebase/fires
 import {
   Check, X, CalendarClock, Plus, Search,
   FileDown, ChevronDown, CheckCircle2,
-  Calendar as CalendarIcon, Shapes, ChevronLeft
+  Calendar as CalendarIcon, Shapes, ChevronLeft, Bell, MessageSquare
 } from 'lucide-react';
+import Modal from '../components/Modal';
 import { getRole, ROLES } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { useData } from '../context/DataContext';
@@ -35,6 +36,8 @@ const Attendance = () => {
   const [batchTimetable, setBatchTimetable] = useState(null);
   const [aggregatedData, setAggregatedData] = useState({}); // { studentId: { periodId: status } }
   const [loading, setLoading] = useState(false);
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+  const [notifyPeriod, setNotifyPeriod] = useState(1);
 
   // Derive students for the selected batch from global state
   const students = useMemo(() => {
@@ -170,6 +173,12 @@ const Attendance = () => {
     return result;
   }, [batchTimetable, attendanceDate, periods]);
 
+  const notifyAbsenteesList = useMemo(() => {
+    return students.filter(s => {
+      return aggregatedData[s.id]?.[notifyPeriod] === 'absent';
+    });
+  }, [students, aggregatedData, notifyPeriod]);
+
 
 
   const handleExportPDF = React.useCallback(() => {
@@ -207,6 +216,7 @@ const Attendance = () => {
       <div className="header-actions-group">
         {viewMode === 'list' && (
           <>
+            {selectedBatch && students.length > 0 && <button className="header-icon-btn" onClick={() => setIsNotifyModalOpen(true)} title="Notify Absentees"><Bell size={18} /></button>}
             {selectedBatch && students.length > 0 && <button className="header-icon-btn" onClick={handleExportPDF} title="Export Matrix"><FileDown size={18} /></button>}
             {canMark && <button className="add-btn" onClick={() => setViewMode('add')}><Plus size={16} /><span>Attendance</span></button>}
           </>
@@ -497,8 +507,60 @@ const Attendance = () => {
            .marking-footer { padding: 12px; }
            .confirm-btn { width: 100%; padding: 12px; font-size: 0.85rem; }
         }
+
+        .notify-modal-content { padding: 10px 0; }
+        .notify-header { margin-bottom: 20px; }
+        .notify-header select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; outline: none; background: #f8fafc; }
+        .notify-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; }
+        .notify-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border: 1px solid var(--border); border-radius: 10px; }
+        .notify-item-name { font-weight: 600; font-size: 0.9rem; color: #1e293b; }
+        .notify-btn { display: flex; align-items: center; gap: 6px; background: #25D366; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .notify-btn:hover { background: #1da851; transform: translateY(-1px); }
+        .no-absentees { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 20px 0; }
       `}</style>
+      
+      <Modal isOpen={isNotifyModalOpen} onClose={() => setIsNotifyModalOpen(false)} title="Notify Absentees">
+        <div className="notify-modal-content">
+          <div className="notify-header">
+            <select value={notifyPeriod} onChange={(e) => setNotifyPeriod(Number(e.target.value))}>
+              {activePeriods.map(p => (
+                <option key={p.periodNumber} value={p.periodNumber}>
+                  Period {p.periodNumber} - {p.subject}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="notify-list">
+            {notifyAbsenteesList.length > 0 ? (
+              notifyAbsenteesList.map(student => {
+                const phoneToUse = student.guardianWhatsApp || student.guardianPhone || student.studentWhatsApp || student.studentPhone;
+                const cleanPhone = phoneToUse ? phoneToUse.replace(/\D/g, '') : '';
+                const subjectName = activePeriods.find(p => p.periodNumber === notifyPeriod)?.subject || 'a class';
+                const message = `Dear Parent/Guardian, ${student.name} was marked absent for ${subjectName} on ${attendanceDate}. Please verify.`;
+                const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}` : null;
+
+                return (
+                  <div key={student.id} className="notify-item">
+                    <span className="notify-item-name">{student.name}</span>
+                    {waLink ? (
+                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="notify-btn">
+                        <MessageSquare size={14} /> Send
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>No Contact</span>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="no-absentees">No absentees found for this period.</div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
+
   );
 };
 

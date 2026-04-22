@@ -9,8 +9,11 @@ import {
   ClipboardCheck,
   GraduationCap,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Activity
 } from 'lucide-react';
+import { db } from '../services/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 import { useData } from '../context/DataContext';
 import Footer from '../components/Footer';
@@ -21,6 +24,24 @@ const Dashboard = () => {
   const { students, teachers, batches } = useData();
   const studentId = getStudentId();
   const teacherId = getTeacherId();
+  const [staffPresent, setStaffPresent] = React.useState(0);
+
+  React.useEffect(() => {
+    if (role !== ROLES.ADMIN) return;
+    const today = new Date().toISOString().split('T')[0];
+    const unsub = onSnapshot(doc(db, 'staff_attendance', today), (snap) => {
+      if (snap.exists()) {
+        const records = snap.data().records || {};
+        const presentCount = Object.keys(records).filter(id => {
+          return Object.values(records[id]).some(status => status === 'present');
+        }).length;
+        setStaffPresent(presentCount);
+      } else {
+        setStaffPresent(0);
+      }
+    });
+    return () => unsub();
+  }, [role]);
 
   const getUserName = () => {
     if (role === ROLES.STUDENT || role === ROLES.PARENT) {
@@ -37,9 +58,10 @@ const Dashboard = () => {
   const userName = getUserName();
 
   const stats = [
-    { label: 'Students', count: students.length, color: '#3b82f6' },
-    { label: 'Teachers', count: teachers.length, color: '#f43f5e' },
-    { label: 'Batches', count: batches.length, color: '#10b981' },
+    { label: 'Students', count: students.length, color: '#3b82f6', icon: UserSquare2 },
+    { label: 'Teachers', count: teachers.length, color: '#f43f5e', icon: Users },
+    { label: 'Batches', count: batches.length, color: '#10b981', icon: Layers },
+    ...(role === ROLES.ADMIN ? [{ label: 'Staff Present', count: `${staffPresent}/${teachers.length}`, color: '#8b5cf6', icon: Activity }] : [])
   ];
 
   const tabs = [
@@ -82,8 +104,13 @@ const Dashboard = () => {
           <div className="stats-row hide-mobile-stats">
             {stats.map(s => (
               <div key={s.label} className="stat-item">
-                <span className="stat-count" style={{ color: s.color }}>{s.count}</span>
-                <span className="stat-label">{s.label}</span>
+                <div className="stat-icon-mini" style={{ color: s.color, background: `${s.color}15` }}>
+                  <s.icon size={16} />
+                </div>
+                <div className="stat-data">
+                  <span className="stat-count" style={{ color: s.color }}>{s.count}</span>
+                  <span className="stat-label">{s.label}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -92,8 +119,13 @@ const Dashboard = () => {
         <div className="stats-row show-mobile-stats">
             {stats.map(s => (
               <div key={s.label} className="stat-item">
-                <span className="stat-count" style={{ color: s.color }}>{s.count}</span>
-                <span className="stat-label">{s.label}</span>
+                <div className="stat-icon-mini" style={{ color: s.color, background: `${s.color}15` }}>
+                  <s.icon size={14} />
+                </div>
+                <div className="stat-data">
+                  <span className="stat-count" style={{ color: s.color }}>{s.count}</span>
+                  <span className="stat-label">{s.label}</span>
+                </div>
               </div>
             ))}
         </div>
@@ -149,11 +181,13 @@ const Dashboard = () => {
         .welcome-text h1 { font-size: 1.6rem; margin-bottom: 4px; text-transform: capitalize; color: #1e293b; font-weight: 800; }
         .welcome-text p { font-size: 0.85rem; color: #64748b; font-weight: 500; }
         
-        .stats-row { display: flex; gap: 32px; }
+        .stats-row { display: flex; gap: 16px; flex-wrap: wrap; }
         .show-mobile-stats { display: none; }
-        .stat-item { display: flex; flex-direction: column; align-items: center; }
-        .stat-count { font-size: 1.8rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
-        .stat-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
+        .stat-item { background: var(--bg-card); padding: 16px 24px; border-radius: 12px; display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); }
+        .stat-icon-mini { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .stat-data { display: flex; flex-direction: column; }
+        .stat-count { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+        .stat-label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .quick-access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
         .tab-card { background: white; border: 1.5px solid #f1f5f9; border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; align-items: center; gap: 14px; position: relative; overflow: hidden; }
@@ -172,11 +206,14 @@ const Dashboard = () => {
           .welcome-text h1 { font-size: 1.25rem; letter-spacing: -0.5px; margin-bottom: 2px; }
           .welcome-text p { font-size: 0.75rem; line-height: 1.2; }
           .hide-mobile-stats { display: none; }
-          .show-mobile-stats { display: flex; width: 100%; justify-content: space-around; border-top: 1px solid #f1f5f9; padding-top: 16px; }
-          .stat-item { align-items: center; }
-          .stat-count { font-size: 1.4rem; }
+          .show-mobile-stats { display: flex; width: 100%; justify-content: flex-start; border-top: 1px solid #f1f5f9; padding-top: 16px; overflow-x: auto; padding-bottom: 8px; }
+          .stat-item { padding: 12px 16px; gap: 12px; flex-shrink: 0; border-width: 1px; }
+          .stat-icon-mini { width: 32px; height: 32px; }
+          .stat-count { font-size: 1.2rem; }
+          .stat-label { font-size: 0.7rem; }
           .admin-manage-btn { margin-top: 8px; }
         }
+
 
         .admin-manage-btn {
           margin-top: 12px;

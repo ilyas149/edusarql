@@ -379,7 +379,7 @@ const StudentDetail = ({ studentId: propId }) => {
       headStyles: { fillColor: [244, 63, 94], textColor: 255, fontSize: 8 },
       columnStyles: { 0: { fontStyle: 'bold', fillColor: [248, 250, 252] } },
       styles: { fontSize: 7, halign: 'center' },
-      didParseCell: function (data) {
+      didParseCell: function(data) {
         if (data.section === 'body' && data.column.index > 0) {
           const val = data.cell.raw;
           if (val === 'PRESENT') {
@@ -390,8 +390,18 @@ const StudentDetail = ({ studentId: propId }) => {
             data.cell.styles.textColor = [220, 38, 38];
           }
         }
+      },
+      didDrawPage: function(data) {
+        const str = "Page " + doc.internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+        doc.text(str, data.settings.margin.left, pageHeight - 10);
+        doc.text("Official Document - EduSarql System", pageSize.width - data.settings.margin.right - 55, pageHeight - 10);
       }
     });
+
 
     doc.save(`Attendance_${student.name.replace(/\s+/g, '_')}_${MONTHS[reportDate.month]}.pdf`);
   };
@@ -451,6 +461,8 @@ const StudentDetail = ({ studentId: propId }) => {
                 <div className="data-item"><label>Student Phone</label><div className="contact-row"><p>{student.studentPhone || 'N/A'}</p>{canContact && student.studentPhone && <a href={`tel:${student.studentPhone}`} className="contact-icon-btn call"><Phone size={14} /></a>}</div></div>
                 <div className="data-item"><label>Student WhatsApp</label><div className="contact-row"><p>{student.studentWhatsApp || 'N/A'}</p>{canContact && student.studentWhatsApp && <a href={`https://wa.me/${student.studentWhatsApp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="contact-icon-btn whatsapp"><MessageSquare size={14} /></a>}</div></div>
               </div>
+
+
             </section>
           </div>
         </div>
