@@ -124,7 +124,9 @@ const StudentDetail = ({ studentId: propId }) => {
     if (!student?.batchId) return;
 
     // 1. Sync Monthly Attendance for the batch
-    setReportLoading(true);
+    if (Object.keys(monthlyAttendance).length === 0) {
+      setReportLoading(true);
+    }
     const yearMonthPrefix = `${reportDate.year}-${String(reportDate.month + 1).padStart(2, '0')}`;
     const qAgg = query(collection(db, 'attendance_aggregated'), where('batchId', '==', student.batchId));
     
@@ -157,7 +159,8 @@ const StudentDetail = ({ studentId: propId }) => {
       unsubAgg();
       unsubNotes();
     };
-  }, [student, reportDate, id]);
+  }, [student, reportDate, id]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const fetchMetadata = useCallback(async () => {
     if (!student) return;
@@ -310,6 +313,22 @@ const StudentDetail = ({ studentId: propId }) => {
     } catch (error) { console.error(error); }
   };
 
+  const usedPeriods = useMemo(() => {
+    if (!batchTimeline || globalPeriods.length === 0) return globalPeriods;
+    const usedIndices = new Set();
+    Object.values(batchTimeline).forEach(daySchedule => {
+      daySchedule.forEach((slot, idx) => {
+        const subName = typeof slot === 'string' ? slot : slot?.subject;
+        if (subName && subName !== '--' && subName !== '') {
+          usedIndices.add(idx);
+        }
+      });
+    });
+    return globalPeriods
+      .map((p, idx) => ({ ...p, originalIndex: idx }))
+      .filter((_, idx) => usedIndices.has(idx));
+  }, [globalPeriods, batchTimeline]);
+
   const reportDays = useMemo(() => {
     const daysInMonth = new Date(reportDate.year, reportDate.month + 1, 0).getDate();
     return Array.from({ length: daysInMonth }, (_, i) => {
@@ -410,7 +429,7 @@ const StudentDetail = ({ studentId: propId }) => {
       </div>
 
       <div className="profile-content-body">
-        {activeTab === 'details' && (
+        <div style={{ display: activeTab === 'details' ? 'block' : 'none' }}>
           <div className="profile-data-sections fadeIn">
             <section className="profile-card">
               <div className="card-header"><User size={16} /><h3>Personal Information</h3></div>
@@ -434,9 +453,9 @@ const StudentDetail = ({ studentId: propId }) => {
               </div>
             </section>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'attendance' && (
+        <div style={{ display: activeTab === 'attendance' ? 'block' : 'none' }}>
           <div className="attendance-dossier-wrapper fadeIn">
             <div className="dossier-controls glass">
               <div className="date-nav">
@@ -460,48 +479,49 @@ const StudentDetail = ({ studentId: propId }) => {
             <div className="dossier-matrix-wrapper glass">
               <div className="matrix-scroll-area" ref={scrollAreaRef} {...dossierDrag}>
                 <table className="dossier-table">
-                  <thead><tr><th className="sticky-col">Date</th>{globalPeriods.map(p => <th key={p.id}>{p.name}</th>)}</tr></thead>
+                  <thead><tr><th className="sticky-col">Date</th>{usedPeriods.map(p => <th key={p.id}>{p.name}</th>)}</tr></thead>
                   <tbody>
                     {reportDays.map(rd => {
-                      const dayStatusMap = monthlyAttendance[rd.dateStr] || {};
-                      const daySchedule = batchTimeline?.[rd.dayName] || [];
-                      return (
-                        <tr key={rd.dayNum}>
-                          <td className={`sticky-col d-tile ${rd.dayName === 'Friday' ? 'is-holiday' : ''}`}>
-                            <div className="d-num">{rd.dayNum}</div>
-                            <div className="d-name">{rd.dayName.substring(0, 3)}</div>
-                          </td>
-                          {globalPeriods.map((p, pIdx) => {
-                            const slot = daySchedule[pIdx];
-                            const subName = typeof slot === 'string' ? slot : slot?.subject;
-                            const hasPeriod = subName && subName !== '--' && subName !== '';
-                            const status = dayStatusMap[String(pIdx + 1)];
-                            return (
-                              <td key={p.id} className={`status-cell ${status === 'present' ? 'is-present' : status === 'absent' ? 'is-absent' : ''}`}>
-                                {hasPeriod ? (
-                                  <div className="cell-content">
-                                    <span className="p-sub-mini">{subName}</span>
-                                    {status ? (
-                                      <div className={`status-orb ${status}`}>
-                                        {status === 'present' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                                      </div>
-                                    ) : <span className="p-null">?</span>}
-                                  </div>
-                                ) : <div className="no-p">--</div>}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
+                       const dayStatusMap = monthlyAttendance[rd.dateStr] || {};
+                       const daySchedule = batchTimeline?.[rd.dayName] || [];
+                       return (
+                         <tr key={rd.dayNum}>
+                           <td className={`sticky-col d-tile ${rd.dayName === 'Friday' ? 'is-holiday' : ''}`}>
+                             <div className="d-num">{rd.dayNum}</div>
+                             <div className="d-name">{rd.dayName.substring(0, 3)}</div>
+                           </td>
+                           {usedPeriods.map((p) => {
+                             const pIdx = p.originalIndex;
+                             const slot = daySchedule[pIdx];
+                             const subName = typeof slot === 'string' ? slot : slot?.subject;
+                             const hasPeriod = subName && subName !== '--' && subName !== '';
+                             const status = dayStatusMap[String(pIdx + 1)];
+                             return (
+                               <td key={p.id} className={`status-cell ${status === 'present' ? 'is-present' : status === 'absent' ? 'is-absent' : ''}`}>
+                                 {hasPeriod ? (
+                                   <div className="cell-content">
+                                     <span className="p-sub-mini">{subName}</span>
+                                     {status ? (
+                                       <div className={`status-orb ${status}`}>
+                                         {status === 'present' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                                       </div>
+                                     ) : <span className="p-null">?</span>}
+                                   </div>
+                                 ) : <div className="no-p">--</div>}
+                               </td>
+                             );
+                           })}
+                         </tr>
+                       );
                     })}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'marks' && (
+        <div style={{ display: activeTab === 'marks' ? 'block' : 'none' }}>
           <div className="performance-container fadeIn">
             <div className="sec-header"><Trophy size={18} color="var(--primary)" /> <h3>Academic Performance History</h3></div>
             <div className="exam-vertical-list">
@@ -575,9 +595,9 @@ const StudentDetail = ({ studentId: propId }) => {
               })}
             </div>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'notes' && (
+        <div style={{ display: activeTab === 'notes' ? 'block' : 'none' }}>
           <div className="notes-vertical-flow fadeIn">
             {(!isStudent && !isParent) && (
               <form onSubmit={handleAddNote} className="note-input-area">
@@ -618,7 +638,7 @@ const StudentDetail = ({ studentId: propId }) => {
               ))}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <Modal isOpen={isImageModalOpen} onClose={() => setIsImageModalOpen(false)} variant="image"><div className="full-image-view"><img src={student.avatarUrl} alt={student.name} /></div></Modal>
@@ -647,7 +667,7 @@ const StudentDetail = ({ studentId: propId }) => {
         .e-icon { width: 40px; height: 40px; border-radius: 12px; background: #fff1f2; color: var(--primary); display: flex; align-items: center; justify-content: center; }
         .e-titles h4 { font-size: 0.95rem; color: #1e293b; font-weight: 800; margin-bottom: 2px; }
         .e-titles span { font-size: 0.65rem; color: #94a3b8; font-weight: 900; text-transform: uppercase; }
-        .exam-acc-body { border-top: 1px solid #f1f5f9; background: #fafafa; padding: 20px; }
+        .exam-acc-body { border-top: 1px solid #f1f5f9; background: #fafafa; padding: 0px; }
         .performance-sheet-wrapper { background: white; border-radius: 12px; border: 1.5px solid #f1f5f9; overflow: hidden; }
         .performance-sheet { width: 100%; border-collapse: collapse; }
         .performance-sheet th { background: #f8fafc; padding: 12px 16px; text-align: left; font-size: 0.65rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
@@ -698,7 +718,7 @@ const StudentDetail = ({ studentId: propId }) => {
         .dossier-matrix-wrapper { border-radius: 12px; overflow: hidden; background: white; border: 1px solid #f1f5f9; }
         .matrix-scroll-area { overflow-x: auto; width: 100%; cursor: grab; user-select: none; }
         .matrix-scroll-area.active-dragging { cursor: grabbing !important; }
-        .dossier-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        .dossier-table { width: 100%; border-collapse: collapse; }
         .dossier-table th { background: #f8fafc; padding: 10px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; border-bottom: 2px solid #f1f5f9; text-align: center; }
         .sticky-col { position: sticky; left: 0; background: #f8fafc; z-index: 10; border-right: 2px solid #f1f5f9; width: 65px; }
         .dossier-table tr:nth-child(even) .sticky-col { background: #fcfcfc; }

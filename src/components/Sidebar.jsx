@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   GraduationCap,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  UserCheck
 } from 'lucide-react';
 import { logout, getRole, ROLES, getStudentId, getTeacherId } from '../services/auth';
 import { useData } from '../context/DataContext';
@@ -47,6 +48,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Students', icon: UserSquare2, path: '/dashboard/students', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Batches', icon: Layers, path: '/dashboard/batches', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Attendance', icon: ClipboardCheck, path: '/dashboard/attendance', roles: [ROLES.ADMIN, ROLES.TEACHER] },
+    { name: 'Staff Attendance', icon: UserCheck, path: '/dashboard/staff-attendance', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     { name: 'Timetable', icon: Calendar, path: '/dashboard/timetable', roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT] },
     { name: 'Exams & Marks', icon: GraduationCap, path: '/dashboard/exams', roles: [ROLES.ADMIN, ROLES.TEACHER] },
     // Scoped Record Link for Students/Parents

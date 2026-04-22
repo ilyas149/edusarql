@@ -33,6 +33,7 @@ const Layout = () => {
     '/dashboard/timetable': 'Timetable',
     '/dashboard/exams': 'Exams & Marks',
     '/dashboard/attendance': 'Attendance Records',
+    '/dashboard/staff-attendance': 'Staff Attendance',
   };
 
   const getTitle = () => {

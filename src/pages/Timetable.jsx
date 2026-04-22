@@ -8,6 +8,8 @@ import {
 import { useHeader } from '../hooks/useHeader';
 import { getRole, ROLES, getStudentId } from '../services/auth';
 import { useData } from '../context/DataContext';
+import { formatTime12h } from '../services/utils';
+
 
 const TIMETABLE_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -216,8 +218,8 @@ const Timetable = () => {
                     {definedPeriods.map((p, idx) => (
                       <div key={idx} className="list-entry">
                         <div className="time-strip">
-                          <span className="t-main">{p.startTime}</span>
-                          <span className="t-sub">{p.endTime}</span>
+                          <span className="t-main">{formatTime12h(p.startTime)}</span>
+                          <span className="t-sub">{formatTime12h(p.endTime)}</span>
                         </div>
                         <div className="entry-content">
                           <div className="sub-txt">{dayPlan[idx]?.subject || <span className="free">Free Period</span>}</div>
@@ -253,7 +255,7 @@ const Timetable = () => {
                   <tr key={p.id}>
                     <td className="sticky-col period-info">
                       <div className="p-name">{p.name}</div>
-                      <div className="p-time">{p.startTime}-{p.endTime}</div>
+                      <div className="p-time">{formatTime12h(p.startTime)}-{formatTime12h(p.endTime)}</div>
                     </td>
                     {TIMETABLE_DAYS.map(day => (
                       <td key={day} className={`slot-cell ${isEditing ? 'input-active' : ''}`}>

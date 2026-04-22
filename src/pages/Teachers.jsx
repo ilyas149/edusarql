@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { User, Plus } from 'lucide-react';
+import { User, Plus, Search } from 'lucide-react';
+import { db } from '../services/firebase';
+import { doc, onSnapshot, collection, query, orderBy, getDocs } from 'firebase/firestore';
+
 import { useHeader } from '../hooks/useHeader';
 import Modal from '../components/Modal';
 import { getRole, ROLES } from '../services/auth';
@@ -18,9 +21,17 @@ const Teachers = () => {
   const { teachers, loading: contextLoading } = useData();
   const loading = contextLoading.teachers;
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDept, setSelectedDept] = useState('');
   
   const isAddModalOpen = searchParams.get('modal') === 'add';
   const activeTeacherId = searchParams.get('teacherId');
+
+  const departments = useMemo(() => {
+    const depts = new Set();
+    teachers.forEach(t => { if (t.department) depts.add(t.department); });
+    return Array.from(depts);
+  }, [teachers]);
 
   const openAddModal = React.useCallback(() => setSearchParams(prev => {
     prev.set('modal', 'add');
@@ -58,6 +69,31 @@ const Teachers = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [attendance, setAttendance] = useState({});
+  const [staffPeriods, setStaffPeriods] = useState([]);
+
+  useEffect(() => {
+    const fetchStaffPeriods = async () => {
+      const q = query(collection(db, 'staff_periods'), orderBy('startTime', 'asc'));
+      const snap = await getDocs(q);
+      setStaffPeriods(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    };
+    fetchStaffPeriods();
+  }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const docRef = doc(db, 'staff_attendance', today);
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        setAttendance(snap.data().records || {});
+      } else {
+        setAttendance({});
+      }
+    });
+    return () => unsub();
+  }, []);
+
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -98,6 +134,17 @@ const Teachers = () => {
     }
     return () => setHeaderAction(null);
   }, [isAdmin, setHeaderAction, openAddModal]);
+
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = 
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.department && t.department.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (t.place && t.place.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesDept = selectedDept === '' || t.department === selectedDept;
+    
+    return matchesSearch && matchesDept;
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -156,22 +203,54 @@ const Teachers = () => {
 
   return (
     <div className="students-page">
+      <div className="filters-container glass">
+        <div className="search-input">
+          <Search size={18} />
+          <input 
+            type="text" 
+            placeholder="Search staff or department..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="batch-filter">
+          <select value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)}>
+            <option value="">All Departments</option>
+            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+      </div>
       {loading ? (
         <div className="loader">Loading teachers...</div>
       ) : (
         <div className="cards-grid">
-          {teachers.map(teacher => (
-            <div key={teacher.id} className="compact-card teacher-card" onClick={() => openTeacherDetail(teacher.id)}>
-              <div className="avatar-mini">
-                {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt="" /> : teacher.name.charAt(0)}
+          {filteredTeachers.map(teacher => {
+            const now = new Date();
+            const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const currentPeriod = staffPeriods.find(p => currentTimeStr >= p.startTime && currentTimeStr <= p.endTime);
+            const status = currentPeriod ? attendance[teacher.id]?.[currentPeriod.id] : null;
+            const isPresent = status === 'present';
+
+            return (
+              <div 
+                key={teacher.id} 
+                className={`compact-card teacher-card ${isPresent ? 'is-present' : ''}`} 
+                onClick={() => openTeacherDetail(teacher.id)}
+              >
+                <div className="avatar-mini">
+                  {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt="" /> : teacher.name.charAt(0)}
+                </div>
+                <div className="card-info">
+                  <span className="card-name">{teacher.name}</span>
+                  <span className="card-sub">{teacher.place || 'No Place'}</span>
+                  <div className="card-tag">{teacher.department || 'Staff'}</div>
+                </div>
+                {isPresent && <div className="status-dot-green"></div>}
+
               </div>
-              <div className="card-info">
-                <span className="card-name">{teacher.name}</span>
-                <span className="card-sub">{teacher.place || 'No Place'}</span>
-                <div className="card-tag">{teacher.department || 'Staff'}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+
         </div>
       )}
 

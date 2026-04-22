@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Subjects from './Subjects';
 import Periods from './Periods';
+import StaffPeriods from './StaffPeriods';
 import ExamTypes from './ExamTypes';
-import { BookOpen, Clock, ShieldCheck, Settings } from 'lucide-react';
+import { BookOpen, Clock, ShieldCheck, Settings, Users } from 'lucide-react';
 
 
 const AdminManagement = () => {
@@ -11,7 +12,8 @@ const AdminManagement = () => {
 
   const tabs = [
     { id: 'subjects', label: 'Subjects', icon: BookOpen, component: <Subjects /> },
-    { id: 'periods', label: 'Time Periods', icon: Clock, component: <Periods /> },
+    { id: 'periods', label: 'Student Periods', icon: Clock, component: <Periods /> },
+    { id: 'staff-periods', label: 'Staff Sessions', icon: Users, component: <StaffPeriods /> },
     { id: 'exam-types', label: 'Exam Categories', icon: ShieldCheck, component: <ExamTypes /> },
   ];
 

@@ -209,10 +209,38 @@ ul {
   background: #fff5f5;
 }
 
-.compact-card.teacher-card .card-tag {
-  background: #ffe4e6;
-  color: #e11d48;
+.compact-card.teacher-card.is-present {
+  border-left-color: #10b981;
 }
+
+.compact-card.teacher-card.is-present:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.compact-card.teacher-card.is-present .card-tag {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.status-dot-green {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #10b98122;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0px #10b98144; }
+  70% { box-shadow: 0 0 0 6px #10b98100; }
+  100% { box-shadow: 0 0 0 0px #10b98100; }
+}
+
 
 .compact-card:hover {
   transform: translateY(-2px);

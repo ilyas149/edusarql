@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { db } from '../services/firebase';
+import { doc, getDoc, setDoc, serverTimestamp, query, collection, orderBy, getDocs } from 'firebase/firestore';
+import { User, Phone, MapPin, Edit2, Trash2, MessageSquare, Briefcase, Calendar, Heart, ChevronLeft, CheckCircle2, X } from 'lucide-react';
+import { getRole, ROLES, isUsernameTaken, getTeacherId } from '../services/auth';
 
-import { User, Phone, MapPin, Edit2, Trash2, MessageSquare, Briefcase, Calendar, Heart, ChevronLeft } from 'lucide-react';
-import { getRole, ROLES, isUsernameTaken } from '../services/auth';
 import { updateTeacher, deleteTeacher } from '../services/teacherService';
 import { uploadToCloudinary } from '../services/cloudinary';
 import { useHeader } from '../hooks/useHeader';
 import Modal from '../components/Modal';
 import '../styles/StudentDetail.css';
 import { useData } from '../context/DataContext';
+import { formatTime12h } from '../services/utils';
+
 
 const TeacherDetail = ({ teacherId: propId }) => {
   const { id: routeId } = useParams();
@@ -20,6 +24,9 @@ const TeacherDetail = ({ teacherId: propId }) => {
   const canContact = isAdmin || isTeacher;
   const { setHeaderAction, setBackAction } = useHeader();
   const { teachers, loading: contextLoading } = useData();
+  const loggedInTeacherId = getTeacherId();
+  const canSeeAttendance = isAdmin || (isTeacher && id === loggedInTeacherId);
+
 
   const teacher = useMemo(() => teachers.find(t => t.id === id), [teachers, id]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +36,8 @@ const TeacherDetail = ({ teacherId: propId }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('overview');
 
   const initialSetupRef = React.useRef(false);
   useEffect(() => {
@@ -155,60 +164,75 @@ const TeacherDetail = ({ teacherId: propId }) => {
         </div>
       </div>
 
-      <div className="profile-content-body">
-        <div className="profile-data-sections">
-          <section className="profile-card">
-            <div className="card-header">
-              <Briefcase size={16} />
-              <h3>Professional Information</h3>
-            </div>
-            <div className="data-grid-layout">
-              <div className="data-item"><label>Department / Subject</label><p>{teacher.department || 'N/A'}</p></div>
-              <div className="data-item"><label>Age</label><p>{teacher.age || 'N/A'}</p></div>
-              <div className="data-item"><label>Blood Group</label><p><Heart size={12} className="ico-red" /> {teacher.bloodGroup || 'N/A'}</p></div>
-              <div className="data-item"><label>House Name</label><p>{teacher.houseName || 'N/A'}</p></div>
-              <div className="data-item full-width"><label>Full Address</label><p>{teacher.address || 'N/A'}</p></div>
-              <div className="data-item full-width"><label>Place</label><p><MapPin size={12} /> {teacher.place || 'N/A'}</p></div>
-            </div>
-          </section>
-
-          <section className="profile-card">
-            <div className="card-header">
-              <Phone size={16} />
-              <h3>Direct Contact</h3>
-            </div>
-            <div className="data-grid-layout">
-              <div className="data-item">
-                <label>Phone Number</label>
-                <div className="contact-row">
-                  <p>{teacher.phone || 'N/A'}</p>
-                  {canContact && teacher.phone && (
-                    <a href={`tel:${teacher.phone}`} className="contact-icon-btn call">
-                      <Phone size={14} />
-                    </a>
-                  )}
-                </div>
-              </div>
-              <div className="data-item">
-                <label>WhatsApp Number</label>
-                <div className="contact-row">
-                  <p>{teacher.whatsapp || teacher.phone || 'N/A'}</p>
-                  {canContact && (teacher.whatsapp || teacher.phone) && (
-                    <a
-                      href={`https://wa.me/${(teacher.whatsapp || teacher.phone).replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="contact-icon-btn whatsapp"
-                    >
-                      <MessageSquare size={14} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+      <div className="profile-nav-tabs">
+        <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>Overview</button>
+        {canSeeAttendance && <button className={activeTab === 'attendance' ? 'active' : ''} onClick={() => setActiveTab('attendance')}>Attendance</button>}
       </div>
+
+
+      <div className="profile-content-body">
+        <div style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
+          <div className="profile-data-sections">
+            <section className="profile-card">
+              <div className="card-header">
+                <Briefcase size={16} />
+                <h3>Professional Information</h3>
+              </div>
+              <div className="data-grid-layout">
+                <div className="data-item"><label>Department / Subject</label><p>{teacher.department || 'N/A'}</p></div>
+                <div className="data-item"><label>Age</label><p>{teacher.age || 'N/A'}</p></div>
+                <div className="data-item"><label>Blood Group</label><p><Heart size={12} className="ico-red" /> {teacher.bloodGroup || 'N/A'}</p></div>
+                <div className="data-item"><label>House Name</label><p>{teacher.houseName || 'N/A'}</p></div>
+                <div className="data-item full-width"><label>Full Address</label><p>{teacher.address || 'N/A'}</p></div>
+                <div className="data-item full-width"><label>Place</label><p><MapPin size={12} /> {teacher.place || 'N/A'}</p></div>
+              </div>
+            </section>
+
+            <section className="profile-card">
+              <div className="card-header">
+                <Phone size={16} />
+                <h3>Direct Contact</h3>
+              </div>
+              <div className="data-grid-layout">
+                <div className="data-item">
+                  <label>Phone Number</label>
+                  <div className="contact-row">
+                    <p>{teacher.phone || 'N/A'}</p>
+                    {canContact && teacher.phone && (
+                      <a href={`tel:${teacher.phone}`} className="contact-icon-btn call">
+                        <Phone size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <div className="data-item">
+                  <label>WhatsApp Number</label>
+                  <div className="contact-row">
+                    <p>{teacher.whatsapp || teacher.phone || 'N/A'}</p>
+                    {canContact && (teacher.whatsapp || teacher.phone) && (
+                      <a
+                        href={`https://wa.me/${(teacher.whatsapp || teacher.phone).replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="contact-icon-btn whatsapp"
+                      >
+                        <MessageSquare size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {canSeeAttendance && (
+          <div style={{ display: activeTab === 'attendance' ? 'block' : 'none' }}>
+            <TeacherAttendanceSection teacherId={id} teacherName={teacher.name} isAdmin={isAdmin} />
+          </div>
+        )}
+      </div>
+
 
       <Modal
         isOpen={isImageModalOpen}
@@ -240,6 +264,291 @@ const TeacherDetail = ({ teacherId: propId }) => {
           </div>
         </form>
       </Modal>
+    </div>
+  );
+};
+
+const TeacherAttendanceSection = ({ teacherId, isAdmin }) => {
+  const loggedInTeacherId = localStorage.getItem('teacherId');
+  const canMark = isAdmin || (loggedInTeacherId === teacherId);
+  
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (getRole() === ROLES.TEACHER) return new Date().toISOString().split('T')[0];
+    return new Date().toISOString().split('T')[0];
+  });
+  const [periods, setPeriods] = useState([]);
+  const [attendance, setAttendance] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const role = getRole();
+
+
+
+  useEffect(() => {
+    const fetchPeriods = async () => {
+      try {
+        const q = query(collection(db, 'staff_periods'), orderBy('startTime', 'asc'));
+        const snap = await getDocs(q);
+        const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPeriods(results);
+
+
+      } catch (err) {
+        console.error("Error fetching staff periods:", err);
+      }
+    };
+    fetchPeriods();
+  }, []);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      // Only show full loader if we don't have data yet
+      if (!attendance || Object.keys(attendance).length === 0) {
+        Promise.resolve().then(() => setLoading(true));
+      }
+      try {
+        const docRef = doc(db, 'staff_attendance', selectedDate);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setAttendance(data.records?.[teacherId] || {});
+        } else {
+          setAttendance({});
+        }
+      } catch (err) {
+        console.error("Error fetching attendance:", err);
+      }
+      setLoading(false);
+    };
+    if (teacherId && selectedDate) {
+      fetchAttendance();
+    }
+  }, [teacherId, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
+  const handleMark = async (periodId, status) => {
+    if (!canMark) {
+      alert("Unauthorized: You can only mark your own attendance.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const docRef = doc(db, 'staff_attendance', selectedDate);
+      const snap = await getDoc(docRef);
+      let allRecords = snap.exists() ? snap.data().records || {} : {};
+      
+      if (!allRecords[teacherId]) allRecords[teacherId] = {};
+      allRecords[teacherId][periodId] = status;
+
+      await setDoc(docRef, { 
+        date: selectedDate, 
+        records: allRecords,
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
+      
+      setAttendance(prev => ({ ...prev, [periodId]: status }));
+    } catch (err) {
+      alert(err.message);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="attendance-section fadeIn">
+      <div className="section-controls">
+        {role !== ROLES.TEACHER && (
+          <div className="date-picker-wrap">
+            <Calendar size={16} />
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)} 
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+        )}
+      </div>
+
+
+      {periods.length === 0 ? (
+        <div className="empty-state">No staff work sessions have been defined.</div>
+      ) : loading ? (
+
+        <div className="loader small">Syncing Records...</div>
+      ) : (
+        <div className="attendance-grid">
+          {periods.map(period => {
+            const now = new Date();
+            const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const isCurrent = currentTimeStr >= period.startTime && currentTimeStr <= period.endTime;
+            const canMarkThis = isAdmin || (loggedInTeacherId === teacherId && (role !== ROLES.TEACHER || isCurrent));
+
+            return (
+              <div key={period.id} className={`attendance-row ${isCurrent ? 'current-active' : ''} ${attendance[period.id] === 'present' ? 'present-marked' : ''}`}>
+
+                <div className="period-info">
+                  <div className="p-header-row">
+                    <span className="p-name">{period.name}</span>
+                    {isCurrent && <span className="current-badge">Active Now</span>}
+                  </div>
+                  <span className="p-time">{formatTime12h(period.startTime)} - {formatTime12h(period.endTime)}</span>
+                </div>
+                <div className="attendance-actions">
+                  <button 
+                    className={`status-btn present ${attendance[period.id] === 'present' ? 'active' : ''}`}
+                    onClick={() => handleMark(period.id, 'present')}
+                    disabled={saving || !canMarkThis}
+                    title={!canMarkThis ? "Attendance can only be marked during the active session time." : ""}
+                  >
+                    <CheckCircle2 size={16} />
+                    <span>Present</span>
+                  </button>
+                  <button 
+                    className={`status-btn absent ${attendance[period.id] === 'absent' ? 'active' : ''}`}
+                    onClick={() => handleMark(period.id, 'absent')}
+                    disabled={saving || !canMarkThis}
+                    title={!canMarkThis ? "Attendance can only be marked during the active session time." : ""}
+                  >
+                    <X size={16} />
+                    <span>Absent</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+        </div>
+      )}
+
+      <style>{`
+        .attendance-section {
+          background: white;
+          padding: 6px;
+          border-radius: 16px;
+          border: 1px solid var(--border-color);
+          animation: fadeIn 0.3s ease;
+        }
+        .section-controls {
+          margin-bottom: 24px;
+          display: flex;
+          justify-content: flex-end;
+        }
+        .date-picker-wrap {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #f8fafc;
+          padding: 8px 16px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          color: #64748b;
+        }
+        .date-picker-wrap input {
+          border: none;
+          background: transparent;
+          font-weight: 700;
+          color: #334155;
+          outline: none;
+        }
+        .attendance-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .attendance-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px;
+          background: #fcfcfc;
+          border-radius: 12px;
+          border: 1px solid #f1f5f9;
+        }
+        .period-info {
+          display: flex;
+          flex-direction: column;
+        }
+        .period-info .p-name {
+          font-weight: 700;
+          color: #1e293b;
+          font-size: 0.95rem;
+        }
+        .period-info .p-time {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          font-weight: 600;
+        }
+        .attendance-actions {
+          display: flex;
+          gap: 8px;
+        }
+        .status-btn {
+          padding: 8px 16px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          transition: all 0.2s;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #94a3b8;
+        }
+        .status-btn.present.active {
+          background: #10b981;
+          color: white;
+          border-color: #10b981;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        .status-btn.absent.active {
+          background: #ef4444;
+          color: white;
+          border-color: #ef4444;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .status-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          filter: grayscale(1);
+        }
+        .current-active {
+          border-color: var(--primary);
+          background: #fff1f2;
+        }
+        .attendance-row.present-marked {
+          border-color: #10b981;
+          background: #ecfdf5;
+        }
+
+        .p-header-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .current-badge {
+          font-size: 0.6rem;
+          font-weight: 900;
+          background: var(--primary);
+          color: white;
+          padding: 2px 6px;
+          border-radius: 4px;
+          text-transform: uppercase;
+        }
+
+        @media (max-width: 500px) {
+          .attendance-row { padding: 10px 12px; }
+          .period-info .p-name { font-size: 0.85rem; }
+          .period-info .p-time { font-size: 0.65rem; }
+          .status-btn { padding: 6px 10px; font-size: 0.7rem; gap: 4px; }
+          .status-btn svg { width: 12px; height: 12px; }
+          .current-badge { font-size: 0.5rem; padding: 1px 4px; }
+          .attendance-actions { gap: 4px; }
+        }
+      `}</style>
+
+
     </div>
   );
 };

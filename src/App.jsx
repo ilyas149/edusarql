@@ -15,6 +15,7 @@ import Subjects from './pages/Subjects';
 import Periods from './pages/Periods';
 import ExamTypes from './pages/ExamTypes';
 import AdminManagement from './pages/AdminManagement';
+import StaffAttendance from './pages/StaffAttendance';
 import { HeaderProvider } from './context/HeaderProvider';
 import { DataProvider } from './context/DataProvider';
 import { getRole, ROLES } from './services/auth';
@@ -46,6 +47,7 @@ function App() {
             <Route path="timetable" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT]}><Timetable /></RoleRoute>} />
             <Route path="exams" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Exams /></RoleRoute>} />
             <Route path="attendance" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><Attendance /></RoleRoute>} />
+            <Route path="staff-attendance" element={<RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TEACHER]}><StaffAttendance /></RoleRoute>} />
             <Route path="admin-management" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminManagement /></RoleRoute>} />
             <Route path="subjects" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><Subjects /></RoleRoute>} />
             <Route path="periods" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><Periods /></RoleRoute>} />

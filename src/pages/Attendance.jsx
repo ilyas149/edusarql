@@ -9,6 +9,8 @@ import {
 import { getRole, ROLES } from '../services/auth';
 import { useHeader } from '../hooks/useHeader';
 import { useData } from '../context/DataContext';
+import { formatTime12h } from '../services/utils';
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -18,11 +20,17 @@ const Attendance = () => {
   const role = getRole();
   const canMark = [ROLES.ADMIN, ROLES.TEACHER].includes(role);
   const { setHeaderAction, setBackAction } = useHeader();
-  const { batches, students: allStudents } = useData();
+  const { batches, students: allStudents, periods } = useData();
+
 
   const [viewMode, setViewMode] = useState('list');
   const [selectedBatch, setSelectedBatch] = useState('');
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    if (getRole() === ROLES.TEACHER) return new Date().toISOString().split('T')[0];
+    return new Date().toISOString().split('T')[0];
+  });
+
+
 
   const [batchTimetable, setBatchTimetable] = useState(null);
   const [aggregatedData, setAggregatedData] = useState({}); // { studentId: { periodId: status } }
@@ -115,7 +123,9 @@ const Attendance = () => {
       return;
     }
 
-    Promise.resolve().then(() => setLoading(true));
+    if (!batchTimetable || Object.keys(aggregatedData).length === 0) {
+      Promise.resolve().then(() => setLoading(true));
+    }
 
     // 1. Fetch Timetable (Usually stable)
     const fetchTT = async () => {
@@ -125,9 +135,7 @@ const Attendance = () => {
       } catch (err) { console.error("TT Error:", err); }
     };
 
-    Promise.resolve().then(() => {
-      fetchTT();
-    });
+    fetchTT();
 
     // 2. Real-time Aggregated Attendance Sync
     const aggDocRef = doc(db, 'attendance_aggregated', `${selectedBatch}_${attendanceDate}`);
@@ -139,18 +147,30 @@ const Attendance = () => {
       setLoading(false);
     });
 
+
     return () => unsub();
-  }, [selectedBatch, attendanceDate]);
+  }, [selectedBatch, attendanceDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const activePeriods = useMemo(() => {
-    if (!batchTimetable || !attendanceDate) return [];
+    if (!batchTimetable || !attendanceDate || !periods) return [];
     const dayName = DAYS[new Date(attendanceDate).getDay()];
     const schedule = batchTimetable[dayName] || [];
-    return schedule.map((slot, idx) => ({
-      subject: typeof slot === 'string' ? slot : slot?.subject,
-      periodNumber: idx + 1
-    })).filter(p => p.subject && p.subject !== '--' && p.subject !== '');
-  }, [batchTimetable, attendanceDate]);
+    
+    let result = schedule.map((slot, idx) => {
+      const periodInfo = periods[idx];
+      return {
+        subject: typeof slot === 'string' ? slot : slot?.subject,
+        periodNumber: idx + 1,
+        startTime: periodInfo?.startTime,
+        endTime: periodInfo?.endTime
+      };
+    }).filter(p => p.subject && p.subject !== '--' && p.subject !== '');
+
+    return result;
+  }, [batchTimetable, attendanceDate, periods]);
+
+
 
   const handleExportPDF = React.useCallback(() => {
     if (!selectedBatch || students.length === 0) return;
@@ -209,9 +229,22 @@ const Attendance = () => {
 
   useEffect(() => {
     if (viewMode === 'add' && activePeriods.length > 0 && !selectedPeriodSlot) {
-      Promise.resolve().then(() => setSelectedPeriodSlot(activePeriods[0]));
+      const now = new Date();
+      const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const current = activePeriods.find(p => currentTimeStr >= p.startTime && currentTimeStr <= p.endTime);
+      
+      if (current) {
+        Promise.resolve().then(() => setSelectedPeriodSlot(current));
+      } else {
+        // Only default to first period if not a teacher OR if no current found
+        if (role !== ROLES.TEACHER) {
+          Promise.resolve().then(() => setSelectedPeriodSlot(activePeriods[0]));
+        }
+      }
     }
-  }, [viewMode, activePeriods, selectedPeriodSlot]);
+  }, [viewMode, activePeriods, selectedPeriodSlot, role]);
+
 
   const handleSaveAttendance = async () => {
     if (!selectedPeriodSlot) return;
@@ -262,13 +295,16 @@ const Attendance = () => {
               </div>
 
               {/* AMAZING DATE PICKER */}
-              <div className="sel-group fadeIn">
-                <label>Attendance Date</label>
-                <div className="premium-input-wrap">
-                  <CalendarIcon size={16} className="sel-icon" />
-                  <input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} />
+              {role !== ROLES.TEACHER && (
+                <div className="sel-group fadeIn">
+                  <label>Attendance Date</label>
+                  <div className="premium-input-wrap">
+                    <CalendarIcon size={16} className="sel-icon" />
+                    <input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} />
+                  </div>
                 </div>
-              </div>
+              )}
+
             </>
           ) : (
             /* AMAZING SUBJECT DROPDOWN */
@@ -276,21 +312,35 @@ const Attendance = () => {
               <label>Instructional Subject Selection</label>
               <div className="custom-dropdown-selector is-marking" onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}>
                 <div className="selector-value">
-                  {selectedPeriodSlot ? `${selectedPeriodSlot.subject} (Period ${selectedPeriodSlot.periodNumber})` : 'Select Subject...'}
+                  {selectedPeriodSlot ? `${selectedPeriodSlot.subject} (${formatTime12h(selectedPeriodSlot.startTime)})` : 'Select Subject...'}
                 </div>
+
                 <ChevronDown size={18} className={`dropdown-arrow ${isSubjectDropdownOpen ? 'open' : ''}`} />
               </div>
               {isSubjectDropdownOpen && (
                 <div className="custom-dropdown-list glass hide-scrollbar">
-                  {activePeriods.length === 0 ? <div className="dropdown-item empty">No Subjects Today</div> : activePeriods.map(p => {
-                    const isMarked = Object.values(aggregatedData).some(s => s[p.periodNumber]);
-                    return (
-                      <div key={p.periodNumber} className={`dropdown-item ${selectedPeriodSlot?.periodNumber === p.periodNumber ? 'selected' : ''}`} onClick={() => { setSelectedPeriodSlot(p); setIsSubjectDropdownOpen(false); }}>
-                        <div className="item-main">{isMarked && <CheckCircle2 size={14} className="marked-icon" />}<span>{p.subject}</span></div>
-                        <span className="item-period">P{p.periodNumber}</span>
-                      </div>
-                    );
-                  })}
+                  {(() => {
+                    let displayPeriods = activePeriods;
+                    if (role === ROLES.TEACHER) {
+                      const now = new Date();
+                      const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                      displayPeriods = activePeriods.filter(p => currentTimeStr >= p.startTime && currentTimeStr <= p.endTime);
+                    }
+
+                    if (displayPeriods.length === 0) {
+                      return <div className="dropdown-item empty">No Active Session for Marking</div>;
+                    }
+
+                    return displayPeriods.map(p => {
+                      const isMarked = Object.values(aggregatedData).some(s => s[p.periodNumber]);
+                      return (
+                        <div key={p.periodNumber} className={`dropdown-item ${selectedPeriodSlot?.periodNumber === p.periodNumber ? 'selected' : ''}`} onClick={() => { setSelectedPeriodSlot(p); setIsSubjectDropdownOpen(false); }}>
+                          <div className="item-main">{isMarked && <CheckCircle2 size={14} className="marked-icon" />}<span>{p.subject}</span></div>
+                          <span className="item-period">{formatTime12h(p.startTime)}</span>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>
@@ -318,7 +368,7 @@ const Attendance = () => {
               <div className="records-table-wrapper glass">
                 <div className="table-responsive hide-scrollbar" ref={matrixRef} {...matrixDrag}>
                   <table className="matrix-table">
-                    <thead><tr><th className="sticky-col-header">Student Identity</th>{activePeriods.map(p => (<th key={p.periodNumber}><div className="sub-name">{p.subject}</div><div className="sub-num">({p.periodNumber})</div></th>))}</tr></thead>
+                    <thead><tr><th className="sticky-col-header">Student Identity</th>{activePeriods.map(p => (<th key={p.periodNumber}><div className="sub-name">{p.subject}</div><div className="sub-num">({formatTime12h(p.startTime)})</div></th>))}</tr></thead>
                     <tbody>
                       {students.map(student => (
                         <tr key={student.id}>
